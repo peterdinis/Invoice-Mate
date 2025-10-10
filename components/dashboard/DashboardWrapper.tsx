@@ -5,8 +5,8 @@ import Link from "next/link";
 import { Clock, DollarSign, Download, FileText, Plus, TrendingUp } from "lucide-react";
 import { DashboardStatCard } from "./DashboardStatCard";
 import { RevenueChart } from "./RevenueChart";
-import { InvoiceStatusChart } from "./InvoiceStatusChart";
 import { RecentInvoices } from "../invoices/RecentInvoices";
+import { InvoiceStatusChart } from "../invoices/InvoiceStatusChart";
 
 const DashboardWrapper: FC = () => {
     return (
