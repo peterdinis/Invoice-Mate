@@ -6,6 +6,7 @@ import { Clock, DollarSign, Download, FileText, Plus, TrendingUp } from "lucide-
 import { DashboardStatCard } from "./DashboardStatCard";
 import { RevenueChart } from "./RevenueChart";
 import { InvoiceStatusChart } from "./InvoiceStatusChart";
+import { RecentInvoices } from "../invoices/RecentInvoices";
 
 const DashboardWrapper: FC = () => {
     return (
@@ -76,6 +77,8 @@ const DashboardWrapper: FC = () => {
                     <RevenueChart />
                     <InvoiceStatusChart />
                 </div>
+
+                <RecentInvoices />
                 </section>
             </main>
         </>
