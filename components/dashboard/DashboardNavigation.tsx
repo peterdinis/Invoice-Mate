@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { UrlObject } from "url";
 import { FC } from "react";
+import { ModeToggle } from "../shared/ModeToggle";
 
 const DashboardNavigation: FC = () => {
 
@@ -49,6 +50,7 @@ const DashboardNavigation: FC = () => {
                 </Link>
               );
             })}
+            <ModeToggle />
           </div>
         </div>
       </div>
