@@ -1,9 +1,8 @@
-"use client";
+
+"use client";  
 
 import { Card } from "@/components/ui/card";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -35,25 +34,52 @@ export const RevenueChart = () => {
               <stop
                 offset="5%"
                 stopColor="hsl(var(--primary))"
-                stopOpacity={0.3}
+                stopOpacity={0.8}
               />
               <stop
                 offset="95%"
                 stopColor="hsl(var(--primary))"
-                stopOpacity={0}
+                stopOpacity={0.1}
               />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-          <YAxis stroke="hsl(var(--muted-foreground))" />
+
+          <CartesianGrid 
+            strokeDasharray="3 3" 
+            stroke="hsl(var(--border))" 
+            opacity={0.3}
+          />
+
+          <XAxis
+            dataKey="month"
+            stroke="hsl(var(--border))"
+            tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
+            tickLine={{ stroke: "hsl(var(--border))" }}
+          />
+          <YAxis
+            stroke="hsl(var(--border))"
+            tick={{ fill: "hsl(var(--foreground))", fontSize: 12 }}
+            tickLine={{ stroke: "hsl(var(--border))" }}
+          />
+
           <Tooltip
             contentStyle={{
               backgroundColor: "hsl(var(--card))",
               border: "1px solid hsl(var(--border))",
               borderRadius: "8px",
+              color: "hsl(var(--card-foreground))",
             }}
+            labelStyle={{
+              color: "hsl(var(--card-foreground))",
+              fontWeight: 600,
+              marginBottom: "4px",
+            }}
+            itemStyle={{
+              color: "hsl(var(--primary))",
+            }}
+            formatter={(value: number) => `€${value.toLocaleString()}`}
           />
+
           <Area
             type="monotone"
             dataKey="revenue"
@@ -61,6 +87,7 @@ export const RevenueChart = () => {
             strokeWidth={3}
             fillOpacity={1}
             fill="url(#colorRevenue)"
+            activeDot={{ r: 6, strokeWidth: 2 }}
           />
         </AreaChart>
       </ResponsiveContainer>
