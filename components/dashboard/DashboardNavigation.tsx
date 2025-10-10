@@ -13,7 +13,7 @@ const DashboardNavigation: FC = () => {
   const pathname = usePathname()
 
   const navItems = [
-    { path: "/", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/invoices", label: "Faktúry", icon: FileText },
     { path: "/clients", label: "Klienti", icon: Users },
   ];
