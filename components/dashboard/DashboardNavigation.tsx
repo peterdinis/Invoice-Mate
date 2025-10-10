@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, FileText, Users } from "lucide-react";
@@ -10,10 +10,10 @@ import { ModeToggle } from "../shared/ModeToggle";
 import { usePathname } from "next/navigation";
 
 const DashboardNavigation: FC = () => {
-  const pathname = usePathname()
+  const pathname = usePathname();
 
   const navItems = [
-    { path: "/", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
     { path: "/invoices", label: "Faktúry", icon: FileText },
     { path: "/clients", label: "Klienti", icon: Users },
   ];
@@ -34,16 +34,18 @@ const DashboardNavigation: FC = () => {
           <div className="flex gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.path || 
+              const isActive =
+                pathname === item.path ||
                 (item.path !== "/" && pathname.startsWith(item.path));
-              
+
               return (
                 <Link key={item.path} href={item.path as unknown as UrlObject}>
                   <Button
                     variant={isActive ? "default" : "ghost"}
                     className={cn(
                       "gap-2",
-                      !isActive && "text-muted-foreground hover:text-foreground"
+                      !isActive &&
+                        "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Icon className="w-4 h-4" />
@@ -60,5 +62,4 @@ const DashboardNavigation: FC = () => {
   );
 };
 
-
-export default DashboardNavigation
+export default DashboardNavigation;

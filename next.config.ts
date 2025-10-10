@@ -3,9 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   experimental: {
-    typedEnv: true
+    typedEnv: true,
   },
-  typedRoutes: true
+  typedRoutes: true,
 };
 
 export default nextConfig;
