@@ -27,7 +27,7 @@ const DashboardNavigation: FC = () => {
               <FileText className="w-6 h-6" />
             </div>
             <span className="font-bold text-xl bg-gradient-primary bg-clip-text">
-              InvoiceHub
+              Invoice Mate
             </span>
           </Link>
 
