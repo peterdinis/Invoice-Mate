@@ -1,9 +1,8 @@
+import AuthWrapper from "@/components/auth/AuthWrapper";
 import { NextPage } from "next";
 
 const Homepage: NextPage = () => {
-  return (
-    <>ABCD</>
-  )
+  return <AuthWrapper />
 }
 
 export default Homepage
