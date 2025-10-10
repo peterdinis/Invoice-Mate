@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
@@ -19,7 +19,7 @@ interface InvoiceItem {
 }
 
 const NewInvoice = () => {
-  const navigate = useRouter()
+  const navigate = useRouter();
   const [items, setItems] = useState<InvoiceItem[]>([
     { id: "1", description: "", quantity: 1, rate: 0 },
   ]);
@@ -37,11 +37,15 @@ const NewInvoice = () => {
     }
   };
 
-  const updateItem = (id: string, field: keyof InvoiceItem, value: string | number) => {
+  const updateItem = (
+    id: string,
+    field: keyof InvoiceItem,
+    value: string | number,
+  ) => {
     setItems(
       items.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item
-      )
+        item.id === id ? { ...item, [field]: value } : item,
+      ),
     );
   };
 
@@ -69,7 +73,9 @@ const NewInvoice = () => {
         </h1>
 
         <Card className="p-6 bg-gradient-card mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-foreground">Client Information</h2>
+          <h2 className="text-xl font-semibold mb-4 text-foreground">
+            Client Information
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="clientName">Client Name</Label>
@@ -77,7 +83,11 @@ const NewInvoice = () => {
             </div>
             <div className="space-y-2">
               <Label htmlFor="clientEmail">Email</Label>
-              <Input id="clientEmail" type="email" placeholder="client@example.com" />
+              <Input
+                id="clientEmail"
+                type="email"
+                placeholder="client@example.com"
+              />
             </div>
           </div>
           <div className="mt-4 space-y-2">
@@ -87,7 +97,9 @@ const NewInvoice = () => {
         </Card>
 
         <Card className="p-6 bg-gradient-card mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-foreground">Invoice Details</h2>
+          <h2 className="text-xl font-semibold mb-4 text-foreground">
+            Invoice Details
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="invoiceNumber">Invoice Number</Label>
@@ -106,8 +118,15 @@ const NewInvoice = () => {
 
         <Card className="p-6 bg-gradient-card mb-6">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold text-foreground">Line Items</h2>
-            <Button onClick={addItem} variant="outline" size="sm" className="gap-2">
+            <h2 className="text-xl font-semibold text-foreground">
+              Line Items
+            </h2>
+            <Button
+              onClick={addItem}
+              variant="outline"
+              size="sm"
+              className="gap-2"
+            >
               <Plus className="w-4 h-4" />
               Add Item
             </Button>
@@ -121,7 +140,9 @@ const NewInvoice = () => {
                   <Input
                     placeholder="Item description"
                     value={item.description}
-                    onChange={(e) => updateItem(item.id, "description", e.target.value)}
+                    onChange={(e) =>
+                      updateItem(item.id, "description", e.target.value)
+                    }
                   />
                 </div>
                 <div className="col-span-6 md:col-span-2 space-y-2">
@@ -130,7 +151,13 @@ const NewInvoice = () => {
                     type="number"
                     min="1"
                     value={item.quantity}
-                    onChange={(e) => updateItem(item.id, "quantity", parseInt(e.target.value) || 0)}
+                    onChange={(e) =>
+                      updateItem(
+                        item.id,
+                        "quantity",
+                        parseInt(e.target.value) || 0,
+                      )
+                    }
                   />
                 </div>
                 <div className="col-span-6 md:col-span-3 space-y-2">
@@ -140,7 +167,13 @@ const NewInvoice = () => {
                     min="0"
                     step="0.01"
                     value={item.rate}
-                    onChange={(e) => updateItem(item.id, "rate", parseFloat(e.target.value) || 0)}
+                    onChange={(e) =>
+                      updateItem(
+                        item.id,
+                        "rate",
+                        parseFloat(e.target.value) || 0,
+                      )
+                    }
                   />
                 </div>
                 <div className="col-span-10 md:col-span-1 flex items-center justify-center">
@@ -173,8 +206,13 @@ const NewInvoice = () => {
         </Card>
 
         <Card className="p-6 bg-gradient-card mb-6">
-          <h2 className="text-xl font-semibold mb-4 text-foreground">Additional Notes</h2>
-          <Textarea placeholder="Add any additional notes or terms..." rows={4} />
+          <h2 className="text-xl font-semibold mb-4 text-foreground">
+            Additional Notes
+          </h2>
+          <Textarea
+            placeholder="Add any additional notes or terms..."
+            rows={4}
+          />
         </Card>
 
         <div className="flex justify-end gap-4">

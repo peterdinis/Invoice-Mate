@@ -1,7 +1,14 @@
-"use client"
+"use client";
 
 import { Card } from "@/components/ui/card";
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
+import {
+  PieChart,
+  Pie,
+  Cell,
+  ResponsiveContainer,
+  Legend,
+  Tooltip,
+} from "recharts";
 
 const data = [
   { name: "Zaplatené", value: 92, color: "hsl(var(--success))" },
@@ -12,7 +19,9 @@ const data = [
 export const InvoiceStatusChart = () => {
   return (
     <Card className="p-6 bg-gradient-card">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">Stav faktúr</h3>
+      <h3 className="text-lg font-semibold mb-4 text-foreground">
+        Stav faktúr
+      </h3>
       <ResponsiveContainer width="100%" height={300}>
         <PieChart>
           <Pie
@@ -20,7 +29,9 @@ export const InvoiceStatusChart = () => {
             cx="50%"
             cy="50%"
             labelLine={false}
-            label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+            label={({ name, percent }) =>
+              `${name} ${(percent * 100).toFixed(0)}%`
+            }
             outerRadius={100}
             fill="#8884d8"
             dataKey="value"

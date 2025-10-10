@@ -2,7 +2,7 @@ import InvoiceDetail from "@/components/invoices/InvoiceDetail";
 import { NextPage } from "next";
 
 const InvoicesDetailPage: NextPage = () => {
-    return <InvoiceDetail />
-}
+  return <InvoiceDetail />;
+};
 
-export default InvoicesDetailPage
+export default InvoicesDetailPage;

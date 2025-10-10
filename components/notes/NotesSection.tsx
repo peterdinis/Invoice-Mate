@@ -13,8 +13,18 @@ interface Note {
 }
 
 const mockNotes: Note[] = [
-  { id: "1", text: "Klient požadoval zmenu splatnosti", date: "2025-10-05", author: "Admin" },
-  { id: "2", text: "Faktúra bola zaslaná emailom", date: "2025-10-06", author: "Admin" },
+  {
+    id: "1",
+    text: "Klient požadoval zmenu splatnosti",
+    date: "2025-10-05",
+    author: "Admin",
+  },
+  {
+    id: "2",
+    text: "Faktúra bola zaslaná emailom",
+    date: "2025-10-06",
+    author: "Admin",
+  },
 ];
 
 export const NotesSection = () => {

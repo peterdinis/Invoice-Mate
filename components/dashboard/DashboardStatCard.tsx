@@ -35,7 +35,7 @@ export const DashboardStatCard = ({
             <p
               className={cn(
                 "text-sm font-medium",
-                trendUp ? "text-success" : "text-muted-foreground"
+                trendUp ? "text-success" : "text-muted-foreground",
               )}
             >
               {trend}

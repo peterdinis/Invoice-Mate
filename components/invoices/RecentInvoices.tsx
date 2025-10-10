@@ -36,9 +36,18 @@ const mockInvoices = [
 ];
 
 const statusConfig = {
-  paid: { label: "Zaplatené", className: "bg-success/10 text-success hover:bg-success/20" },
-  pending: { label: "Čakajúce", className: "bg-warning/10 text-warning hover:bg-warning/20" },
-  overdue: { label: "Po splatnosti", className: "bg-destructive/10 text-destructive hover:bg-destructive/20" },
+  paid: {
+    label: "Zaplatené",
+    className: "bg-success/10 text-success hover:bg-success/20",
+  },
+  pending: {
+    label: "Čakajúce",
+    className: "bg-warning/10 text-warning hover:bg-warning/20",
+  },
+  overdue: {
+    label: "Po splatnosti",
+    className: "bg-destructive/10 text-destructive hover:bg-destructive/20",
+  },
 };
 
 export const RecentInvoices = () => {
@@ -60,8 +69,16 @@ export const RecentInvoices = () => {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-1">
                 <p className="font-semibold text-foreground">{invoice.id}</p>
-                <Badge className={statusConfig[invoice.status as keyof typeof statusConfig].className}>
-                  {statusConfig[invoice.status as keyof typeof statusConfig].label}
+                <Badge
+                  className={
+                    statusConfig[invoice.status as keyof typeof statusConfig]
+                      .className
+                  }
+                >
+                  {
+                    statusConfig[invoice.status as keyof typeof statusConfig]
+                      .label
+                  }
                 </Badge>
               </div>
               <p className="text-sm text-muted-foreground">{invoice.client}</p>
