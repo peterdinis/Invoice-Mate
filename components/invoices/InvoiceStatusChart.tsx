@@ -11,15 +11,21 @@ import {
 } from "recharts";
 
 const data = [
-  { name: "Zaplatené", value: 92, color: "hsl(var(--success))" },
-  { name: "Čakajúce", value: 48, color: "hsl(var(--warning))" },
-  { name: "Po splatnosti", value: 16, color: "hsl(var(--destructive))" },
+  { name: "Zaplatené", value: 92, color: "#22c55e" },
+  { name: "Čakajúce", value: 48, color: "#eab308" },
+  { name: "Po splatnosti", value: 16, color: "#ef4444" },
 ];
 
 export const InvoiceStatusChart = () => {
   return (
-    <Card className="p-6 bg-gradient-card">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">
+    <Card style={{ padding: "1.5rem" }}>
+      <h3
+        style={{
+          fontSize: "1.125rem",
+          fontWeight: 600,
+          marginBottom: "1rem",
+        }}
+      >
         Stav faktúr
       </h3>
       <ResponsiveContainer width="100%" height={300}>
@@ -42,9 +48,14 @@ export const InvoiceStatusChart = () => {
           </Pie>
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
+              backgroundColor: "#ffffff",
+              border: "1px solid #e5e7eb",
               borderRadius: "8px",
+              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
+            }}
+            labelStyle={{
+              color: "#111827",
+              fontWeight: 600,
             }}
           />
         </PieChart>

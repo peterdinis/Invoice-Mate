@@ -2,8 +2,6 @@
 
 import { Card } from "@/components/ui/card";
 import {
-  LineChart,
-  Line,
   AreaChart,
   Area,
   XAxis,
@@ -24,43 +22,65 @@ const data = [
 
 export const RevenueChart = () => {
   return (
-    <Card className="p-6 bg-gradient-card">
-      <h3 className="text-lg font-semibold mb-4 text-foreground">
+    <Card style={{ padding: "1.5rem" }}>
+      <h3
+        style={{
+          fontSize: "1.125rem",
+          fontWeight: 600,
+          marginBottom: "1rem",
+        }}
+      >
         Vývoj príjmov
       </h3>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={data}>
           <defs>
             <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-              <stop
-                offset="5%"
-                stopColor="hsl(var(--primary))"
-                stopOpacity={0.3}
-              />
-              <stop
-                offset="95%"
-                stopColor="hsl(var(--primary))"
-                stopOpacity={0}
-              />
+              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.8} />
+              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.1} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-          <XAxis dataKey="month" stroke="hsl(var(--muted-foreground))" />
-          <YAxis stroke="hsl(var(--muted-foreground))" />
+
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
+
+          <XAxis
+            dataKey="month"
+            stroke="#e5e7eb"
+            tick={{ fill: "#6b7280", fontSize: 12 }}
+            tickLine={{ stroke: "#e5e7eb" }}
+          />
+          <YAxis
+            stroke="#e5e7eb"
+            tick={{ fill: "#6b7280", fontSize: 12 }}
+            tickLine={{ stroke: "#e5e7eb" }}
+          />
+
           <Tooltip
             contentStyle={{
-              backgroundColor: "hsl(var(--card))",
-              border: "1px solid hsl(var(--border))",
+              backgroundColor: "#ffffff",
+              border: "1px solid #e5e7eb",
               borderRadius: "8px",
+              boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)",
             }}
+            labelStyle={{
+              color: "#111827",
+              fontWeight: 600,
+              marginBottom: "4px",
+            }}
+            itemStyle={{
+              color: "#8b5cf6",
+            }}
+            formatter={(value: number) => `€${value.toLocaleString()}`}
           />
+
           <Area
             type="monotone"
             dataKey="revenue"
-            stroke="hsl(var(--primary))"
+            stroke="#8b5cf6"
             strokeWidth={3}
             fillOpacity={1}
             fill="url(#colorRevenue)"
+            activeDot={{ r: 6, strokeWidth: 2 }}
           />
         </AreaChart>
       </ResponsiveContainer>
