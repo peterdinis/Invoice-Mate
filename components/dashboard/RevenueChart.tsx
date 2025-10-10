@@ -1,4 +1,4 @@
-"use client";  
+"use client";
 
 import { Card } from "@/components/ui/card";
 import {
@@ -23,11 +23,13 @@ const data = [
 export const RevenueChart = () => {
   return (
     <Card style={{ padding: "1.5rem" }}>
-      <h3 style={{ 
-        fontSize: "1.125rem", 
-        fontWeight: 600, 
-        marginBottom: "1rem" 
-      }}>
+      <h3
+        style={{
+          fontSize: "1.125rem",
+          fontWeight: 600,
+          marginBottom: "1rem",
+        }}
+      >
         Vývoj príjmov
       </h3>
       <ResponsiveContainer width="100%" height={300}>
@@ -39,11 +41,7 @@ export const RevenueChart = () => {
             </linearGradient>
           </defs>
 
-          <CartesianGrid 
-            strokeDasharray="3 3" 
-            stroke="#e5e7eb"
-            opacity={0.3}
-          />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
 
           <XAxis
             dataKey="month"

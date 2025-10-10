@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Card } from "@/components/ui/card";
@@ -20,11 +19,13 @@ const data = [
 export const InvoiceStatusChart = () => {
   return (
     <Card style={{ padding: "1.5rem" }}>
-      <h3 style={{ 
-        fontSize: "1.125rem", 
-        fontWeight: 600, 
-        marginBottom: "1rem" 
-      }}>
+      <h3
+        style={{
+          fontSize: "1.125rem",
+          fontWeight: 600,
+          marginBottom: "1rem",
+        }}
+      >
         Stav faktúr
       </h3>
       <ResponsiveContainer width="100%" height={300}>
