@@ -10,6 +10,7 @@ import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import CustomLink from "../shared/CustomLink";
 
 interface InvoiceItem {
   id: string;
@@ -61,12 +62,12 @@ const NewInvoice = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Link href="/invoices">
+        <CustomLink href="/invoices">
           <Button variant="ghost" className="gap-2 mb-6">
             <ArrowLeft className="w-4 h-4" />
             Back to Invoices
           </Button>
-        </Link>
+        </CustomLink>
 
         <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent mb-8">
           Create New Invoice
@@ -216,11 +217,11 @@ const NewInvoice = () => {
         </Card>
 
         <div className="flex justify-end gap-4">
-          <Link href="/invoices">
+          <CustomLink href="/invoices">
             <Button variant="outline" size="lg">
               Cancel
             </Button>
-          </Link>
+          </CustomLink>
           <Button onClick={handleSave} size="lg">
             Create Invoice
           </Button>

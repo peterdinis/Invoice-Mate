@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import Link from "next/link";
 import { exportInvoiceToPDF } from "@/lib/pdfs/pdfExport";
 import { NotesSection } from "../notes/NotesSection";
+import CustomLink from "../shared/CustomLink";
 
 const InvoiceDetail = () => {
   const { id } = useParams();
@@ -58,12 +59,12 @@ const InvoiceDetail = () => {
   return (
     <div className="min-h-screen bg-background">
       <div className="container mx-auto px-4 py-8 max-w-4xl">
-        <Link href="/invoices">
+        <CustomLink href="/invoices">
           <Button variant="ghost" className="gap-2 mb-6">
             <ArrowLeft className="w-4 h-4" />
             Back to Invoices
           </Button>
-        </Link>
+        </CustomLink>
 
         <div className="flex justify-between items-start mb-8">
           <div>
@@ -89,12 +90,12 @@ const InvoiceDetail = () => {
               <Download className="w-4 h-4" />
               Stiahnuť PDF
             </Button>
-            <Link href={`/invoices/${invoice.id}/edit`}>
+            <CustomLink href={`/invoices/${invoice.id}/edit`}>
               <Button className="gap-2">
                 <Edit className="w-4 h-4" />
                 Upraviť
               </Button>
-            </Link>
+            </CustomLink>
           </div>
         </div>
 

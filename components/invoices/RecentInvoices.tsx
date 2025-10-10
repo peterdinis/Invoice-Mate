@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Eye } from "lucide-react";
 import Link from "next/link";
+import CustomLink from "../shared/CustomLink";
 
 const mockInvoices = [
   {
@@ -55,9 +56,9 @@ export const RecentInvoices = () => {
     <Card className="p-6 bg-gradient-card">
       <div className="flex justify-between items-center mb-6">
         <h2 className="text-2xl font-bold text-foreground">Posledné faktúry</h2>
-        <Link href="/invoices">
+        <CustomLink href="/invoices">
           <Button variant="outline">Zobraziť všetky</Button>
-        </Link>
+        </CustomLink>
       </div>
 
       <div className="space-y-4">
@@ -89,11 +90,11 @@ export const RecentInvoices = () => {
                 <p className="font-bold text-foreground">{invoice.amount}</p>
                 <p className="text-sm text-muted-foreground">{invoice.date}</p>
               </div>
-              <Link href={`/invoices/${invoice.id}`}>
+              <CustomLink href={`/invoices/${invoice.id}`}>
                 <Button variant="ghost" size="icon">
                   <Eye className="w-4 h-4" />
                 </Button>
-              </Link>
+              </CustomLink>
             </div>
           </div>
         ))}
