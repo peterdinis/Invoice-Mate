@@ -7,8 +7,10 @@ import Link from "next/link";
 import { UrlObject } from "url";
 import { FC } from "react";
 import { ModeToggle } from "../shared/ModeToggle";
+import { usePathname } from "next/navigation";
 
 const DashboardNavigation: FC = () => {
+  const pathname = usePathname()
 
   const navItems = [
     { path: "/", label: "Dashboard", icon: LayoutDashboard },
@@ -32,8 +34,8 @@ const DashboardNavigation: FC = () => {
           <div className="flex gap-2">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = location.pathname === item.path || 
-                (item.path !== "/" && location.pathname.startsWith(item.path));
+              const isActive = pathname === item.path || 
+                (item.path !== "/" && pathname.startsWith(item.path));
               
               return (
                 <Link key={item.path} href={item.path as unknown as UrlObject}>
