@@ -38,11 +38,9 @@ importers:
       '@tanstack/react-query-devtools':
         specifier: ^5.90.2
         version: 5.90.2(@tanstack/react-query@5.90.2(react@19.1.0))(react@19.1.0)
-<<<<<<< HEAD
       '@tanstack/react-table':
         specifier: ^8.21.3
         version: 8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
-=======
       '@tiptap/extension-color':
         specifier: ^3.6.6
         version: 3.6.6(@tiptap/extension-text-style@3.6.6(@tiptap/core@3.6.6(@tiptap/pm@3.6.6)))
@@ -91,7 +89,6 @@ importers:
       '@tiptap/starter-kit':
         specifier: ^3.6.6
         version: 3.6.6
->>>>>>> main
       bcryptjs:
         specifier: ^3.0.2
         version: 3.0.2
@@ -1041,7 +1038,6 @@ packages:
     peerDependencies:
       react: ^18 || ^19
 
-<<<<<<< HEAD
   '@tanstack/react-table@8.21.3':
     resolution: {integrity: sha512-5nNMTSETP4ykGegmVkhjcS8tTLW6Vl4axfEGQN3v0zdHYbK4UfoqfPChclTrJ4EoK9QynqAu9oUf8VEmrpZ5Ww==}
     engines: {node: '>=12'}
@@ -1052,7 +1048,7 @@ packages:
   '@tanstack/table-core@8.21.3':
     resolution: {integrity: sha512-ldZXEhOBb8Is7xLs01fR3YEc3DERiz5silj8tnGkFZytt1abEvl/GhUmCE0PMLaMPTa3Jk4HbKmRlHmu+gCftg==}
     engines: {node: '>=12'}
-=======
+
   '@tiptap/core@3.6.6':
     resolution: {integrity: sha512-7Mx3Vc2qS9IpT6s/Xarxot1PKvbNIq6Avp3vU/BubyrH6gaGApd4UOvTMwGfS4itpradzd/DfwkmB4/r6wAjNQ==}
     peerDependencies:
@@ -1262,7 +1258,6 @@ packages:
 
   '@tiptap/starter-kit@3.6.6':
     resolution: {integrity: sha512-pKTlQEdyiy6aebjpOyWzjxmyPHM6mUEOHhyAN9hxCpHhkDHcOt3+CX+YlodDtrIfNdPEDyrvsDlvtrEavSTQLw==}
->>>>>>> main
 
   '@types/bcryptjs@3.0.0':
     resolution: {integrity: sha512-WRZOuCuaz8UcZZE4R5HXTco2goQSI2XxjGY3hbM/xDvwmqFWd4ivooImsMx65OKM6CtNKbnZ5YL+YwAwK7c1dg==}
@@ -3038,7 +3033,6 @@ snapshots:
       '@tanstack/query-core': 5.90.2
       react: 19.1.0
 
-<<<<<<< HEAD
   '@tanstack/react-table@8.21.3(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
     dependencies:
       '@tanstack/table-core': 8.21.3
@@ -3046,7 +3040,7 @@ snapshots:
       react-dom: 19.1.0(react@19.1.0)
 
   '@tanstack/table-core@8.21.3': {}
-=======
+
   '@tiptap/core@3.6.6(@tiptap/pm@3.6.6)':
     dependencies:
       '@tiptap/pm': 3.6.6
@@ -3272,7 +3266,6 @@ snapshots:
       '@tiptap/extension-underline': 3.6.6(@tiptap/core@3.6.6(@tiptap/pm@3.6.6))
       '@tiptap/extensions': 3.6.6(@tiptap/core@3.6.6(@tiptap/pm@3.6.6))(@tiptap/pm@3.6.6)
       '@tiptap/pm': 3.6.6
->>>>>>> main
 
   '@types/bcryptjs@3.0.0':
     dependencies:
