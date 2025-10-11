@@ -4,6 +4,7 @@ import "./globals.css";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import ScrollToTop from "@/components/shared/ScrollToTop";
 import QueryProvider from "@/components/providers/QueryProvide";
+import TransitionProvider from "@/components/providers/TransitionProvider";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -37,8 +38,10 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <QueryProvider>
-            {children}
-            <ScrollToTop />
+            <TransitionProvider>
+              {children}
+              <ScrollToTop />
+            </TransitionProvider>
           </QueryProvider>
         </ThemeProvider>
       </body>
