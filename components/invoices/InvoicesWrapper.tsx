@@ -103,7 +103,10 @@ const InvoicesWrapper: FC = () => {
                 <h3 className="font-semibold text-foreground">Priečinky</h3>
                 <FolderDialog />
               </div>
-              <FolderList selectedFolder={selectedFolder} onFolderSelect={setSelectedFolder} />
+              <FolderList
+                selectedFolder={selectedFolder}
+                onFolderSelect={setSelectedFolder}
+              />
             </Card>
 
             <Card className="p-6 bg-gradient-card lg:col-span-3">

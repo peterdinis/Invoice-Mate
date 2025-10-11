@@ -15,26 +15,31 @@ const mockFolders = [
   { id: "4", name: "Archív 2024", count: 12 },
 ];
 
-export const FolderList = ({ selectedFolder, onFolderSelect }: FolderListProps) => {
+export const FolderList = ({
+  selectedFolder,
+  onFolderSelect,
+}: FolderListProps) => {
   return (
     <div className="space-y-1">
       {mockFolders.map((folder) => {
         const isSelected = selectedFolder === folder.id;
         const Icon = isSelected ? FolderOpen : Folder;
-        
+
         return (
           <Button
             key={folder.id || "all"}
             variant={isSelected ? "secondary" : "ghost"}
             className={cn(
               "w-full justify-start gap-2",
-              isSelected && "bg-primary/10 text-primary hover:bg-primary/20"
+              isSelected && "bg-primary/10 text-primary hover:bg-primary/20",
             )}
             onClick={() => onFolderSelect(folder.id)}
           >
             <Icon className="w-4 h-4" />
             <span className="flex-1 text-left">{folder.name}</span>
-            <span className="text-xs text-muted-foreground">{folder.count}</span>
+            <span className="text-xs text-muted-foreground">
+              {folder.count}
+            </span>
           </Button>
         );
       })}
