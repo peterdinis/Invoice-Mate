@@ -8,6 +8,7 @@ import { UrlObject } from "url";
 import { FC } from "react";
 import { ModeToggle } from "../shared/ModeToggle";
 import { usePathname } from "next/navigation";
+import CustomLink from "../shared/CustomLink";
 
 const DashboardNavigation: FC = () => {
   const pathname = usePathname();
@@ -22,14 +23,14 @@ const DashboardNavigation: FC = () => {
     <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <Link href="/" className="flex items-center gap-2">
+          <CustomLink href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
               <FileText className="w-6 h-6" />
             </div>
             <span className="font-bold text-xl bg-gradient-primary bg-clip-text">
               Invoice Mate
             </span>
-          </Link>
+          </CustomLink>
 
           <div className="flex gap-2">
             {navItems.map((item) => {
@@ -39,7 +40,7 @@ const DashboardNavigation: FC = () => {
                 (item.path !== "/" && pathname.startsWith(item.path));
 
               return (
-                <Link key={item.path} href={item.path as unknown as UrlObject}>
+                <CustomLink key={item.path} href={item.path}>
                   <Button
                     variant={isActive ? "default" : "ghost"}
                     className={cn(
@@ -51,7 +52,7 @@ const DashboardNavigation: FC = () => {
                     <Icon className="w-4 h-4" />
                     {item.label}
                   </Button>
-                </Link>
+                </CustomLink>
               );
             })}
             <ModeToggle />

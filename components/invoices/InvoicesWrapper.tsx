@@ -7,6 +7,7 @@ import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import Link from "next/link";
 import { Input } from "../ui/input";
+import CustomLink from "../shared/CustomLink";
 
 const mockInvoices = [
   {
@@ -86,12 +87,12 @@ const InvoicesWrapper: FC = () => {
                 Spravujte a sledujte všetky vaše faktúry
               </p>
             </div>
-            <Link href="/invoices/new">
+            <CustomLink href="/invoices/new">
               <Button className="gap-2" size="lg">
                 <Plus className="w-5 h-5" />
                 Nová faktúra
               </Button>
-            </Link>
+            </CustomLink>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
@@ -175,16 +176,16 @@ const InvoicesWrapper: FC = () => {
                         </td>
                         <td className="py-4 px-4">
                           <div className="flex justify-end gap-2">
-                            <Link href={`/invoices/${invoice.id}`}>
+                            <CustomLink href={`/invoices/${invoice.id}`}>
                               <Button variant="ghost" size="icon">
                                 <Eye className="w-4 h-4" />
                               </Button>
-                            </Link>
-                            <Link href={`/invoices/${invoice.id}/edit`}>
+                            </CustomLink>
+                            <CustomLink href={`/invoices/${invoice.id}/edit`}>
                               <Button variant="ghost" size="icon">
                                 <Edit className="w-4 h-4" />
                               </Button>
-                            </Link>
+                            </CustomLink>
                             <Button variant="ghost" size="icon">
                               <Trash2 className="w-4 h-4 text-destructive" />
                             </Button>

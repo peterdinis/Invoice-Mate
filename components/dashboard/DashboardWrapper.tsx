@@ -14,6 +14,7 @@ import { DashboardStatCard } from "./DashboardStatCard";
 import { RevenueChart } from "./RevenueChart";
 import { RecentInvoices } from "../invoices/RecentInvoices";
 import { InvoiceStatusChart } from "../invoices/InvoiceStatusChart";
+import CustomLink from "../shared/CustomLink";
 
 const DashboardWrapper: FC = () => {
   return (
@@ -35,12 +36,12 @@ const DashboardWrapper: FC = () => {
                 <Download className="w-5 h-5" />
                 Stiahnuť report
               </Button>
-              <Link href="/invoices/new">
+              <CustomLink href="/invoices/new">
                 <Button className="gap-2" size="lg">
                   <Plus className="w-5 h-5" />
                   Nová faktúra
                 </Button>
-              </Link>
+              </CustomLink>
             </nav>
           </header>
 
