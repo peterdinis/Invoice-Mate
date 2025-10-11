@@ -8,9 +8,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email address."),
-  password: z
-    .string()
-    .min(6, "Password must be at least 6 characters long."),
+  password: z.string().min(6, "Password must be at least 6 characters long."),
 });
 
 type FormValues = z.infer<typeof schema>;
@@ -28,13 +26,14 @@ const AuthWrapper: FC = () => {
     resolver: zodResolver(schema),
   });
 
-  
   const onSubmit = async (data: FormValues) => {
     setError("");
     setLoading(true);
 
     try {
-      const endpoint = isSignUp ? "/api/auth/sign-up/email" : "/api/auth/sign-in/email";
+      const endpoint = isSignUp
+        ? "/api/auth/sign-up/email"
+        : "/api/auth/sign-in/email";
 
       const res = await fetch(endpoint, {
         method: "POST",
