@@ -93,7 +93,7 @@ const DashboardNavigation: FC = () => {
                     className={cn(
                       "gap-2",
                       !isActive &&
-                      "text-muted-foreground hover:text-foreground",
+                        "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Icon className="w-4 h-4" />

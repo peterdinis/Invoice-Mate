@@ -7,11 +7,7 @@ type TransitionProviderProps = {
 };
 
 const TransitionProvider: FC<TransitionProviderProps> = ({ children }) => {
-  return (
-    <div className="animate-slide-in">
-      {children}
-    </div>
-  );
+  return <div className="animate-slide-in">{children}</div>;
 };
 
 export default TransitionProvider;
