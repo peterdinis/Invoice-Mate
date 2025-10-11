@@ -30,22 +30,26 @@ const AuthWrapper: FC = () => {
     resolver: zodResolver(schema),
   });
 
+  
   const onSubmit = async (data: FormValues) => {
     setError("");
     setLoading(true);
 
     try {
-      const endpoint = isSignUp ? "sign-up-email" : "sign-in-email";
+      const endpoint = isSignUp ? "/api/auth/sign-up/email" : "/api/auth/sign-in/email";
 
-      const res = await fetch(`${AUTH_API}/${endpoint}`, {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
+        body: JSON.stringify({
+          email: data.email,
+          password: data.password,
+        }),
       });
 
       if (!res.ok) {
         const body = await res.json().catch(() => null);
-        throw new Error(body?.error ?? "Something went wrong");
+        throw new Error(body?.message ?? "Something went wrong");
       }
 
       // ✅ success - redirect or reload to refresh session
