@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState, useEffect } from "react";
+import { FC } from "react";
 import { useRouter } from "next/navigation";
 import { User, LogOut } from "lucide-react";
 import {
@@ -11,47 +11,57 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
+interface Session {
+  user: {
+    email: string;
+  };
+}
+
+const fetchSession = async (): Promise<Session> => {
+  const res = await fetch("/api/auth/get-session");
+  if (!res.ok) {
+    throw new Error("Failed to fetch session");
+  }
+  return res.json();
+};
+
+const logoutRequest = async () => {
+  const res = await fetch("/api/auth/sign-out", { method: "POST" });
+  if (!res.ok) {
+    throw new Error("Logout failed");
+  }
+  return res.json();
+};
 
 const ProfileDropdown: FC = () => {
   const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [email, setEmail] = useState<string>("");
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
-    const fetchSession = async () => {
-      try {
-        const res = await fetch("/api/auth/get-session");
-        if (res.ok) {
-          const data = await res.json();
-          setEmail(data.user?.email || "");
-        }
-      } catch (err) {
-        console.error("Failed to fetch session", err);
-      }
-    };
+  const { data: session } = useQuery({
+    queryKey: ["session"],
+    queryFn: fetchSession,
+    retry: false,
+  });
 
-    fetchSession();
-  }, []);
-
-  const handleLogout = async () => {
-    setLoading(true);
-    try {
-      await fetch("/api/auth/sign-out", { method: "POST" });
-      router.push("/auth");
-    } catch (err) {
-      console.error("Logout failed", err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const logoutMutation = useMutation({
+    mutationFn: logoutRequest,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["session"] });
+      router.push("/");
+    },
+  });
 
   const getInitials = (email: string) => {
     return email.slice(0, 2).toUpperCase();
   };
 
-  if (!email) {
+  if (!session?.user?.email) {
     return null;
   }
+
+  const email = session.user.email;
 
   return (
     <DropdownMenu>
@@ -77,12 +87,12 @@ const ProfileDropdown: FC = () => {
           Profile
         </DropdownMenuItem>
         <DropdownMenuItem
-          onClick={handleLogout}
+          onClick={() => logoutMutation.mutate()}
           className="text-red-600"
-          disabled={loading}
+          disabled={logoutMutation.isPending}
         >
           <LogOut size={16} className="mr-2" />
-          {loading ? "Logging out..." : "Logout"}
+          {logoutMutation.isPending ? "Logging out..." : "Logout"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>

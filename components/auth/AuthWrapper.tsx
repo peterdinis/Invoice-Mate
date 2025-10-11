@@ -5,6 +5,8 @@ import { LogIn, UserPlus } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 
 const schema = z.object({
   email: z.string().email("Please enter a valid email address."),
@@ -13,10 +15,27 @@ const schema = z.object({
 
 type FormValues = z.infer<typeof schema>;
 
+const authRequest = async (endpoint: string, data: FormValues) => {
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      email: data.email,
+      password: data.password,
+    }),
+  });
+
+  if (!res.ok) {
+    const body = await res.json().catch(() => null);
+    throw new Error(body?.message ?? "Something went wrong");
+  }
+
+  return res.json();
+};
+
 const AuthWrapper: FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [error, setError] = useState("");
-  const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const {
     register,
@@ -26,36 +45,20 @@ const AuthWrapper: FC = () => {
     resolver: zodResolver(schema),
   });
 
-  const onSubmit = async (data: FormValues) => {
-    setError("");
-    setLoading(true);
-
-    try {
+  const mutation = useMutation({
+    mutationFn: (data: FormValues) => {
       const endpoint = isSignUp
         ? "/api/auth/sign-up/email"
         : "/api/auth/sign-in/email";
+      return authRequest(endpoint, data);
+    },
+    onSuccess: () => {
+      router.push("/dashboard");
+    },
+  });
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          email: data.email,
-          password: data.password,
-        }),
-      });
-
-      if (!res.ok) {
-        const body = await res.json().catch(() => null);
-        throw new Error(body?.message ?? "Something went wrong");
-      }
-
-      // ✅ success - redirect or reload to refresh session
-      window.location.href = "/dashboard";
-    } catch (err: any) {
-      setError(err.message || "An error occurred.");
-    } finally {
-      setLoading(false);
-    }
+  const onSubmit = (data: FormValues) => {
+    mutation.mutate(data);
   };
 
   return (
@@ -127,18 +130,22 @@ const AuthWrapper: FC = () => {
             )}
           </div>
 
-          {error && (
+          {mutation.isError && (
             <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
-              {error}
+              {mutation.error?.message || "An error occurred."}
             </div>
           )}
 
           <button
             type="submit"
-            disabled={loading}
+            disabled={mutation.isPending}
             className="w-full bg-slate-900 text-white py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
+            {mutation.isPending
+              ? "Please wait..."
+              : isSignUp
+                ? "Sign Up"
+                : "Sign In"}
           </button>
         </form>
 
