@@ -335,20 +335,10 @@ const TiptapEditor: FC<TiptapEditorProps> = ({
 
         {/* Insert */}
         <div className="flex gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={setLink}
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={setLink}>
             <LinkIcon className="h-4 w-4" />
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={addImage}
-          >
+          <Button type="button" variant="ghost" size="sm" onClick={addImage}>
             <ImageIcon className="h-4 w-4" />
           </Button>
           <Button

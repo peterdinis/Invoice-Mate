@@ -1,4 +1,4 @@
-"use client"
+"use client";
 
 import { FC, Suspense } from "react";
 import DashboardNavigation from "./DashboardNavigation";
@@ -65,7 +65,6 @@ const DashboardWrapper: FC = () => {
     saveAs(data, "report.xlsx");
   };
 
-
   return (
     <Suspense fallback={<Spinner />}>
       <DashboardNavigation />
@@ -90,7 +89,9 @@ const DashboardWrapper: FC = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={downloadPDF}>PDF</DropdownMenuItem>
-                  <DropdownMenuItem onClick={downloadExcel}>Excel</DropdownMenuItem>
+                  <DropdownMenuItem onClick={downloadExcel}>
+                    Excel
+                  </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
               <CustomLink href="/invoices/new">
