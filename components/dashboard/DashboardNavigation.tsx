@@ -24,14 +24,14 @@ const DashboardNavigation: FC = () => {
           if (data.user) {
             setIsAuthenticated(true);
           } else {
-            router.push("/auth");
+            router.push("/");
           }
         } else {
-          router.push("/auth");
+          router.push("/");
         }
       } catch (err) {
         console.error("Auth check failed", err);
-        router.push("/auth");
+        router.push("/");
       } finally {
         setLoading(false);
       }

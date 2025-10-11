@@ -6,8 +6,6 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 
-const AUTH_API = "/api/auth";
-
 const schema = z.object({
   email: z.string().email("Please enter a valid email address."),
   password: z
