@@ -3,11 +3,12 @@
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FC, useEffect, useState } from "react";
+import { FC, Suspense, useEffect, useState } from "react";
 import { ModeToggle } from "../shared/ModeToggle";
 import { usePathname, useRouter } from "next/navigation";
 import CustomLink from "../shared/CustomLink";
 import ProfileDropdown from "../auth/ProfileDropdown";
+import { Spinner } from "../ui/spinner";
 
 const DashboardNavigation: FC = () => {
   const pathname = usePathname();
@@ -48,14 +49,16 @@ const DashboardNavigation: FC = () => {
 
   if (loading) {
     return (
-      <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16">
-            <div className="w-32 h-8 bg-muted animate-pulse rounded" />
-            <div className="w-64 h-8 bg-muted animate-pulse rounded" />
+      <Suspense fallback={<Spinner />}>
+        <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
+          <div className="container mx-auto px-4">
+            <div className="flex items-center justify-between h-16">
+              <div className="w-32 h-8 bg-muted animate-pulse rounded" />
+              <div className="w-64 h-8 bg-muted animate-pulse rounded" />
+            </div>
           </div>
-        </div>
-      </nav>
+        </nav>
+      </Suspense>
     );
   }
 
@@ -90,7 +93,7 @@ const DashboardNavigation: FC = () => {
                     className={cn(
                       "gap-2",
                       !isActive &&
-                        "text-muted-foreground hover:text-foreground",
+                      "text-muted-foreground hover:text-foreground",
                     )}
                   >
                     <Icon className="w-4 h-4" />
