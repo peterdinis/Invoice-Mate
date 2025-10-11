@@ -2,18 +2,59 @@
 
 import { FC, useState } from "react";
 import { LogIn, UserPlus } from "lucide-react";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+
+const AUTH_API = "/api/auth";
+
+const schema = z.object({
+  email: z.string().email("Please enter a valid email address."),
+  password: z
+    .string()
+    .min(6, "Password must be at least 6 characters long."),
+});
+
+type FormValues = z.infer<typeof schema>;
 
 const AuthWrapper: FC = () => {
   const [isSignUp, setIsSignUp] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<FormValues>({
+    resolver: zodResolver(schema),
+  });
+
+  const onSubmit = async (data: FormValues) => {
     setError("");
     setLoading(true);
+
+    try {
+      const endpoint = isSignUp ? "sign-up-email" : "sign-in-email";
+
+      const res = await fetch(`${AUTH_API}/${endpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error ?? "Something went wrong");
+      }
+
+      // ✅ success - redirect or reload to refresh session
+      window.location.href = "/dashboard";
+    } catch (err: any) {
+      setError(err.message || "An error occurred.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -34,7 +75,7 @@ const AuthWrapper: FC = () => {
             : "Sign in to your account"}
         </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
             <label
               htmlFor="email"
@@ -45,12 +86,19 @@ const AuthWrapper: FC = () => {
             <input
               id="email"
               type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+              {...register("email")}
+              className={`w-full px-4 py-3 border ${
+                errors.email
+                  ? "border-red-400 focus:ring-red-400"
+                  : "border-slate-300 focus:ring-slate-900"
+              } rounded-lg focus:ring-2 focus:border-transparent transition-all`}
               placeholder="you@example.com"
-              required
             />
+            {errors.email && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div>
@@ -63,13 +111,19 @@ const AuthWrapper: FC = () => {
             <input
               id="password"
               type="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all"
+              {...register("password")}
+              className={`w-full px-4 py-3 border ${
+                errors.password
+                  ? "border-red-400 focus:ring-red-400"
+                  : "border-slate-300 focus:ring-slate-900"
+              } rounded-lg focus:ring-2 focus:border-transparent transition-all`}
               placeholder="••••••••"
-              required
-              minLength={6}
             />
+            {errors.password && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           {error && (
