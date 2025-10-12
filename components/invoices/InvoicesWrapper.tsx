@@ -1,11 +1,18 @@
 "use client";
 
 import { FC, useState, useMemo } from "react";
-import DashboardNavigation from "../dashboard/DashboardNavigation";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
 import { Plus, Search, Eye, Edit, Trash2 } from "lucide-react";
+
+import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import Link from "next/link";
 import { Input } from "../ui/input";
 import CustomLink from "../shared/CustomLink";
 import { FolderDialog } from "../folders/FolderDialog";
@@ -19,7 +26,15 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination";
 
-const mockInvoices = [
+interface Invoice {
+  id: string;
+  client: string;
+  amount: string;
+  status: "paid" | "pending" | "overdue";
+  date: string;
+}
+
+const mockInvoices: Invoice[] = [
   { id: "INV-001", client: "Acme Corporation", amount: "$5,280", status: "paid", date: "2025-10-05" },
   { id: "INV-002", client: "Tech Startup Inc", amount: "$3,420", status: "pending", date: "2025-10-03" },
   { id: "INV-003", client: "Design Studio LLC", amount: "$7,890", status: "paid", date: "2025-10-01" },
@@ -43,23 +58,97 @@ const ITEMS_PER_PAGE = 5;
 const InvoicesWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [pageIndex, setPageIndex] = useState(0);
 
-  // Filter + pagination
-  const filteredInvoices = useMemo(() => {
-    return mockInvoices.filter((invoice) =>
-      invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [searchTerm]);
-
-  const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
-  const paginatedInvoices = filteredInvoices.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+  const filteredData = useMemo(
+    () =>
+      mockInvoices.filter(
+        (invoice) =>
+          invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [searchTerm]
   );
 
-  const handlePageChange = (page: number) => setCurrentPage(page);
+  // ✨ Explicit generic in ColumnDef and table
+  const columns: ColumnDef<Invoice, any>[] = [
+    {
+      accessorKey: "id",
+      header: "Číslo",
+      cell: (info) => <span className="font-medium">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: "client",
+      header: "Klient",
+    },
+    {
+      accessorKey: "amount",
+      header: "Suma",
+      cell: (info) => <span className="font-semibold">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: "status",
+      header: "Stav",
+      cell: (info) => {
+        const status = info.getValue() as keyof typeof statusConfig;
+        const cfg = statusConfig[status];
+        return (
+          <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${cfg.className}`}>
+            {cfg.label}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "date",
+      header: "Dátum",
+      cell: (info) => <span className="text-muted-foreground">{info.getValue() as string}</span>,
+    },
+    {
+      id: "actions",
+      header: "Akcie",
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <CustomLink href={`/invoices/${row.original.id}`}>
+            <Button variant="ghost" size="icon">
+              <Eye className="w-4 h-4" />
+            </Button>
+          </CustomLink>
+          <CustomLink href={`/invoices/${row.original.id}/edit`}>
+            <Button variant="ghost" size="icon">
+              <Edit className="w-4 h-4" />
+            </Button>
+          </CustomLink>
+          <Button variant="ghost" size="icon">
+            <Trash2 className="w-4 h-4 text-destructive" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  // ✅ useReactTable generic to match data type
+  const table = useReactTable<Invoice>({
+    data: filteredData,
+    columns,
+    state: {
+      pagination: { pageIndex, pageSize: ITEMS_PER_PAGE },
+    },
+    onPaginationChange: (updater) => {
+      // updater can be function or object
+      if (typeof updater === "function") {
+        setPageIndex((old) => updater({ pageIndex: old, pageSize: ITEMS_PER_PAGE }).pageIndex);
+      } else {
+        setPageIndex(updater.pageIndex);
+      }
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    // filtered row model not necessary since we filter outside, but can be enabled
+    manualPagination: false,
+  });
+
+  const totalPages = table.getPageCount();
 
   return (
     <>
@@ -68,12 +157,8 @@ const InvoicesWrapper: FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Faktúry
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Spravujte a sledujte všetky vaše faktúry
-              </p>
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Faktúry</h1>
+              <p className="text-muted-foreground mt-2">Spravujte a sledujte všetky vaše faktúry</p>
             </div>
             <CustomLink href="/invoices/new">
               <Button className="gap-2" size="lg">
@@ -84,19 +169,14 @@ const InvoicesWrapper: FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-            {/* Sidebar - folders */}
             <Card className="p-6 bg-gradient-card lg:col-span-1">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-foreground">Priečinky</h3>
                 <FolderDialog />
               </div>
-              <FolderList
-                selectedFolder={selectedFolder}
-                onFolderSelect={setSelectedFolder}
-              />
+              <FolderList selectedFolder={selectedFolder} onFolderSelect={setSelectedFolder} />
             </Card>
 
-            {/* Table */}
             <Card className="p-6 bg-gradient-card lg:col-span-3">
               <div className="mb-6">
                 <div className="relative">
@@ -106,7 +186,7 @@ const InvoicesWrapper: FC = () => {
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
-                      setCurrentPage(1);
+                      setPageIndex(0); // reset to first page when searching
                     }}
                     className="pl-10"
                   />
@@ -116,83 +196,48 @@ const InvoicesWrapper: FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Číslo</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Klient</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Suma</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Stav</th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Dátum</th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-muted-foreground">Akcie</th>
-                    </tr>
+                    {table.getHeaderGroups().map((hg) => (
+                      <tr key={hg.id} className="border-b border-border">
+                        {hg.headers.map((header) => (
+                          <th key={header.id} className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
                   </thead>
                   <tbody>
-                    {paginatedInvoices.map((invoice) => (
-                      <tr
-                        key={invoice.id}
-                        className="border-b border-border hover:bg-muted/50 transition-colors"
-                      >
-                        <td className="py-4 px-4 font-medium text-foreground">{invoice.id}</td>
-                        <td className="py-4 px-4 text-foreground">{invoice.client}</td>
-                        <td className="py-4 px-4 font-semibold text-foreground">{invoice.amount}</td>
-                        <td className="py-4 px-4">
-                          <span
-                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusConfig[invoice.status as keyof typeof statusConfig].className}`}
-                          >
-                            {statusConfig[invoice.status as keyof typeof statusConfig].label}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4 text-muted-foreground">{invoice.date}</td>
-                        <td className="py-4 px-4">
-                          <div className="flex justify-end gap-2">
-                            <CustomLink href={`/invoices/${invoice.id}`}>
-                              <Button variant="ghost" size="icon">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </CustomLink>
-                            <CustomLink href={`/invoices/${invoice.id}/edit`}>
-                              <Button variant="ghost" size="icon">
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            </CustomLink>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </td>
+                    {table.getRowModel().rows.map((row) => (
+                      <tr key={row.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                        {row.getVisibleCells().map((cell) => (
+                          <td key={cell.id} className="py-4 px-4">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
 
-              {/* Pagination */}
               {totalPages > 1 && (
                 <div className="mt-6">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
-                        <PaginationPrevious
-                          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                          className={currentPage === 1 ? "opacity-50 pointer-events-none" : ""}
-                        />
+                        <PaginationPrevious onClick={() => table.previousPage()} className={!table.getCanPreviousPage() ? "opacity-50 pointer-events-none" : ""} />
                       </PaginationItem>
 
                       {Array.from({ length: totalPages }, (_, i) => (
                         <PaginationItem key={i}>
-                          <PaginationLink
-                            onClick={() => handlePageChange(i + 1)}
-                            isActive={currentPage === i + 1}
-                          >
+                          <PaginationLink onClick={() => table.setPageIndex(i)} isActive={pageIndex === i}>
                             {i + 1}
                           </PaginationLink>
                         </PaginationItem>
                       ))}
 
                       <PaginationItem>
-                        <PaginationNext
-                          onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                          className={currentPage === totalPages ? "opacity-50 pointer-events-none" : ""}
-                        />
+                        <PaginationNext onClick={() => table.nextPage()} className={!table.getCanNextPage() ? "opacity-50 pointer-events-none" : ""} />
                       </PaginationItem>
                     </PaginationContent>
                   </Pagination>
