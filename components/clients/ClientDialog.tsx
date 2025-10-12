@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   Dialog,
@@ -12,50 +14,76 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Edit } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useCreateClient } from "@/hooks/clients/useCreateClient";
+
+const clientSchema = z.object({
+  name: z.string().min(1, "Meno je povinné"),
+  email: z.string().email("Zadajte platný email"),
+  phone: z.string().optional(),
+  address: z.string().optional(),
+  note: z.string().optional(),
+});
+
+type ClientFormValues = z.infer<typeof clientSchema>;
 
 interface ClientDialogProps {
   mode?: "create" | "edit";
-  client?: {
-    name: string;
-    email: string;
-    phone?: string;
-    address?: string;
-    note?: string;
-  };
-  onSave?: (client: any) => void;
+  client?: Partial<ClientFormValues>;
   trigger?: React.ReactNode;
 }
 
 export const ClientDialog = ({
   mode = "create",
   client,
-  onSave,
   trigger,
 }: ClientDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: client?.name || "",
-    email: client?.email || "",
-    phone: client?.phone || "",
-    address: client?.address || "",
-    note: client?.note || "",
+
+  const { mutateAsync: createClient, isPending } = useCreateClient();
+
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    reset,
+  } = useForm<ClientFormValues>({
+    resolver: zodResolver(clientSchema),
+    defaultValues: client ?? {
+      name: "",
+      email: "",
+      phone: "",
+      address: "",
+      note: "",
+    },
   });
 
-  const handleSave = () => {
-    if (!formData.name.trim() || !formData.email.trim()) {
-      toast.error("Vyplňte meno a email klienta");
-      return;
-    }
+  const onSubmit = async (data: ClientFormValues) => {
+    try {
+      await createClient({
+        name: data.name,
+        email: data.email,
+        address: data.address,
+      });
 
-    onSave?.(formData);
-    toast.success(
-      mode === "create" ? "Klient bol vytvorený" : "Klient bol upravený",
-    );
-    setOpen(false);
+      toast.success("Klient bol úspešne vytvorený 🎉");
+      setOpen(false);
+      reset();
+    } catch (err: any) {
+      toast.error(err.message || "Nepodarilo sa vytvoriť klienta");
+    }
   };
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog
+      open={open}
+      onOpenChange={(val) => {
+        setOpen(val);
+        if (!val) reset(client);
+      }}
+    >
       <DialogTrigger asChild>
         {trigger || (
           <Button className="gap-2">
@@ -68,86 +96,92 @@ export const ClientDialog = ({
           </Button>
         )}
       </DialogTrigger>
+
       <DialogContent className="max-w-2xl">
         <DialogHeader>
           <DialogTitle>
             {mode === "create" ? "Vytvoriť nového klienta" : "Upraviť klienta"}
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="name">Meno / Firma *</Label>
               <Input
                 id="name"
-                value={formData.name}
-                onChange={(e) =>
-                  setFormData({ ...formData, name: e.target.value })
-                }
+                {...register("name")}
                 placeholder="Zadajte meno alebo názov firmy"
               />
+              {errors.name && (
+                <p className="text-sm text-red-600">{errors.name.message}</p>
+              )}
             </div>
+
             <div className="space-y-2">
               <Label htmlFor="email">Email *</Label>
               <Input
                 id="email"
                 type="email"
-                value={formData.email}
-                onChange={(e) =>
-                  setFormData({ ...formData, email: e.target.value })
-                }
+                {...register("email")}
                 placeholder="email@priklad.sk"
               />
+              {errors.email && (
+                <p className="text-sm text-red-600">{errors.email.message}</p>
+              )}
             </div>
           </div>
 
+          {/* Phone */}
           <div className="space-y-2">
             <Label htmlFor="phone">Telefón</Label>
             <Input
               id="phone"
-              value={formData.phone}
-              onChange={(e) =>
-                setFormData({ ...formData, phone: e.target.value })
-              }
+              {...register("phone")}
               placeholder="+421 XXX XXX XXX"
             />
           </div>
 
+          {/* Address */}
           <div className="space-y-2">
             <Label htmlFor="address">Adresa</Label>
             <Textarea
               id="address"
-              value={formData.address}
-              onChange={(e) =>
-                setFormData({ ...formData, address: e.target.value })
-              }
+              {...register("address")}
               placeholder="Ulica, PSČ Mesto"
               rows={3}
             />
           </div>
 
+          {/* Note */}
           <div className="space-y-2">
             <Label htmlFor="note">Poznámky</Label>
             <Textarea
               id="note"
-              value={formData.note}
-              onChange={(e) =>
-                setFormData({ ...formData, note: e.target.value })
-              }
+              {...register("note")}
               placeholder="Doplňujúce informácie o klientovi..."
               rows={3}
             />
           </div>
 
+          {/* Actions */}
           <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Zrušiť
             </Button>
-            <Button onClick={handleSave}>
-              {mode === "create" ? "Vytvoriť" : "Uložiť zmeny"}
+            <Button type="submit" disabled={isSubmitting || isPending}>
+              {isSubmitting || isPending
+                ? "Ukladám..."
+                : mode === "create"
+                  ? "Vytvoriť"
+                  : "Uložiť zmeny"}
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );
