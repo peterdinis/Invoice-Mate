@@ -1,8 +1,8 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useMemo } from "react";
 import DashboardNavigation from "../dashboard/DashboardNavigation";
-import { Plus, Search, Badge, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
 import Link from "next/link";
@@ -10,70 +10,56 @@ import { Input } from "../ui/input";
 import CustomLink from "../shared/CustomLink";
 import { FolderDialog } from "../folders/FolderDialog";
 import { FolderList } from "../folders/FolderList";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationLink,
+} from "@/components/ui/pagination";
 
 const mockInvoices = [
-  {
-    id: "INV-001",
-    client: "Acme Corporation",
-    amount: "$5,280",
-    status: "paid",
-    date: "2025-10-05",
-  },
-  {
-    id: "INV-002",
-    client: "Tech Startup Inc",
-    amount: "$3,420",
-    status: "pending",
-    date: "2025-10-03",
-  },
-  {
-    id: "INV-003",
-    client: "Design Studio LLC",
-    amount: "$7,890",
-    status: "paid",
-    date: "2025-10-01",
-  },
-  {
-    id: "INV-004",
-    client: "Marketing Agency",
-    amount: "$2,150",
-    status: "overdue",
-    date: "2025-09-28",
-  },
-  {
-    id: "INV-005",
-    client: "Consulting Firm",
-    amount: "$4,560",
-    status: "pending",
-    date: "2025-09-25",
-  },
-  {
-    id: "INV-006",
-    client: "E-commerce Store",
-    amount: "$8,920",
-    status: "paid",
-    date: "2025-09-22",
-  },
+  { id: "INV-001", client: "Acme Corporation", amount: "$5,280", status: "paid", date: "2025-10-05" },
+  { id: "INV-002", client: "Tech Startup Inc", amount: "$3,420", status: "pending", date: "2025-10-03" },
+  { id: "INV-003", client: "Design Studio LLC", amount: "$7,890", status: "paid", date: "2025-10-01" },
+  { id: "INV-004", client: "Marketing Agency", amount: "$2,150", status: "overdue", date: "2025-09-28" },
+  { id: "INV-005", client: "Consulting Firm", amount: "$4,560", status: "pending", date: "2025-09-25" },
+  { id: "INV-006", client: "E-commerce Store", amount: "$8,920", status: "paid", date: "2025-09-22" },
+  { id: "INV-007", client: "WebWorks Ltd", amount: "$3,750", status: "paid", date: "2025-09-20" },
+  { id: "INV-008", client: "Cloudify", amount: "$9,320", status: "pending", date: "2025-09-15" },
+  { id: "INV-009", client: "DataCorp", amount: "$12,500", status: "paid", date: "2025-09-12" },
+  { id: "INV-010", client: "GreenEnergy", amount: "$2,990", status: "overdue", date: "2025-09-10" },
 ];
 
 const statusConfig = {
-  paid: {
-    label: "Zaplatené",
-    className: "bg-success/10 text-success hover:bg-success/20",
-  },
-  pending: {
-    label: "Čakajúce",
-    className: "bg-warning/10 text-warning hover:bg-warning/20",
-  },
-  overdue: {
-    label: "Po splatnosti",
-    className: "bg-destructive/10 text-destructive hover:bg-destructive/20",
-  },
+  paid: { label: "Zaplatené", className: "bg-success/10 text-success hover:bg-success/20" },
+  pending: { label: "Čakajúce", className: "bg-warning/10 text-warning hover:bg-warning/20" },
+  overdue: { label: "Po splatnosti", className: "bg-destructive/10 text-destructive hover:bg-destructive/20" },
 };
+
+const ITEMS_PER_PAGE = 5;
 
 const InvoicesWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // Filter + pagination
+  const filteredInvoices = useMemo(() => {
+    return mockInvoices.filter((invoice) =>
+      invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [searchTerm]);
+
+  const totalPages = Math.ceil(filteredInvoices.length / ITEMS_PER_PAGE);
+  const paginatedInvoices = filteredInvoices.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (page: number) => setCurrentPage(page);
 
   return (
     <>
@@ -98,6 +84,7 @@ const InvoicesWrapper: FC = () => {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+            {/* Sidebar - folders */}
             <Card className="p-6 bg-gradient-card lg:col-span-1">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-foreground">Priečinky</h3>
@@ -109,6 +96,7 @@ const InvoicesWrapper: FC = () => {
               />
             </Card>
 
+            {/* Table */}
             <Card className="p-6 bg-gradient-card lg:col-span-3">
               <div className="mb-6">
                 <div className="relative">
@@ -116,7 +104,10 @@ const InvoicesWrapper: FC = () => {
                   <Input
                     placeholder="Hľadať faktúry..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setCurrentPage(1);
+                    }}
                     className="pl-10"
                   />
                 </div>
@@ -126,59 +117,31 @@ const InvoicesWrapper: FC = () => {
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Číslo
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Klient
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Suma
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Stav
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Dátum
-                      </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Akcie
-                      </th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Číslo</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Klient</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Suma</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Stav</th>
+                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">Dátum</th>
+                      <th className="text-right py-3 px-4 text-sm font-semibold text-muted-foreground">Akcie</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {mockInvoices.map((invoice) => (
+                    {paginatedInvoices.map((invoice) => (
                       <tr
                         key={invoice.id}
                         className="border-b border-border hover:bg-muted/50 transition-colors"
                       >
-                        <td className="py-4 px-4 font-medium text-foreground">
-                          {invoice.id}
-                        </td>
-                        <td className="py-4 px-4 text-foreground">
-                          {invoice.client}
-                        </td>
-                        <td className="py-4 px-4 font-semibold text-foreground">
-                          {invoice.amount}
-                        </td>
+                        <td className="py-4 px-4 font-medium text-foreground">{invoice.id}</td>
+                        <td className="py-4 px-4 text-foreground">{invoice.client}</td>
+                        <td className="py-4 px-4 font-semibold text-foreground">{invoice.amount}</td>
                         <td className="py-4 px-4">
-                          <Badge
-                            className={
-                              statusConfig[
-                                invoice.status as keyof typeof statusConfig
-                              ].className
-                            }
+                          <span
+                            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${statusConfig[invoice.status as keyof typeof statusConfig].className}`}
                           >
-                            {
-                              statusConfig[
-                                invoice.status as keyof typeof statusConfig
-                              ].label
-                            }
-                          </Badge>
+                            {statusConfig[invoice.status as keyof typeof statusConfig].label}
+                          </span>
                         </td>
-                        <td className="py-4 px-4 text-muted-foreground">
-                          {invoice.date}
-                        </td>
+                        <td className="py-4 px-4 text-muted-foreground">{invoice.date}</td>
                         <td className="py-4 px-4">
                           <div className="flex justify-end gap-2">
                             <CustomLink href={`/invoices/${invoice.id}`}>
@@ -201,6 +164,40 @@ const InvoicesWrapper: FC = () => {
                   </tbody>
                 </table>
               </div>
+
+              {/* Pagination */}
+              {totalPages > 1 && (
+                <div className="mt-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                          className={currentPage === 1 ? "opacity-50 pointer-events-none" : ""}
+                        />
+                      </PaginationItem>
+
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink
+                            onClick={() => handlePageChange(i + 1)}
+                            isActive={currentPage === i + 1}
+                          >
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                          className={currentPage === totalPages ? "opacity-50 pointer-events-none" : ""}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </Card>
           </div>
         </div>
