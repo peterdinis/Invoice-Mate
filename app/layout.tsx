@@ -18,18 +18,21 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Invoice Mate",
-  description: "Easily manage your clients, invoices, and payments in one place.",
+  description:
+    "Easily manage your clients, invoices, and payments in one place.",
   keywords: ["clients", "invoices", "billing", "payments", "management"],
   openGraph: {
     title: "Invoice Mate",
-    description: "Easily manage your clients, invoices, and payments in one place.",
+    description:
+      "Easily manage your clients, invoices, and payments in one place.",
     type: "website",
     url: "https://yourapp.com",
   },
   twitter: {
     card: "summary_large_image",
     title: "Invoice Mate",
-    description: "Easily manage your clients, invoices, and payments in one place.",
+    description:
+      "Easily manage your clients, invoices, and payments in one place.",
   },
 };
 

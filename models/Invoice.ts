@@ -40,7 +40,7 @@ const InvoiceSchema = new Schema<IInvoice>(
     notes: { type: String },
     total: { type: Number, required: true, default: 0 },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default mongoose.models.Invoice ||

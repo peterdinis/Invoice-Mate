@@ -21,7 +21,7 @@ const FolderSchema = new Schema<IFolder>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default mongoose.models.Folder ||
