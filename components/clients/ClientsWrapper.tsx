@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Plus, Search, Mail, Eye, Edit } from "lucide-react";
 import DashboardNavigation from "../dashboard/DashboardNavigation";
+import { ClientDialog } from "./ClientDialog";
 
 const mockClients = [
   {
@@ -55,14 +56,14 @@ const ClientsWrapper: FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text">
                 Klienti
               </h1>
               <p className="text-muted-foreground mt-2">
                 Spravujte vzťahy s vašimi klientmi
               </p>
             </div>
-            CLIENT DIALOG
+            <ClientDialog />
           </div>
 
           <Card className="p-6 bg-gradient-card">
@@ -94,7 +95,9 @@ const ClientsWrapper: FC = () => {
                       <Button variant="ghost" size="icon">
                         <Mail className="w-4 h-4" />
                       </Button>
-                      CLIENT DIALOG
+                      <Button variant="ghost" size="icon">
+                        <Eye className="w-4 h-4" />
+                      </Button>
                     </div>
                   </div>
                   <h3 className="font-semibold text-lg text-foreground mb-1">
