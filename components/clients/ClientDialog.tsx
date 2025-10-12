@@ -177,8 +177,8 @@ export const ClientDialog = ({
               {isSubmitting || isPending
                 ? "Ukladám..."
                 : mode === "create"
-                ? "Vytvoriť"
-                : "Uložiť zmeny"}
+                  ? "Vytvoriť"
+                  : "Uložiť zmeny"}
             </Button>
           </div>
         </form>

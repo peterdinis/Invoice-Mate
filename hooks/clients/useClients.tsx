@@ -24,7 +24,7 @@ interface ClientsResponse {
 async function fetchClients(
   page: number,
   limit: number,
-  searchTerm: string
+  searchTerm: string,
 ): Promise<ClientsResponse> {
   const params = new URLSearchParams({
     page: String(page),

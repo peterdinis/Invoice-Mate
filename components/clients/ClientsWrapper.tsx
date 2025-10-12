@@ -82,7 +82,9 @@ const ClientsWrapper: FC = () => {
                 className="flex flex-col items-center justify-center py-16 text-muted-foreground"
               >
                 <SearchIcon className="w-12 h-12 mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium">Žiadni klienti neboli nájdení</p>
+                <p className="text-lg font-medium">
+                  Žiadni klienti neboli nájdení
+                </p>
                 <p className="text-sm mt-1">Skúste zmeniť hľadaný výraz</p>
               </motion.div>
             ) : (
@@ -118,11 +120,15 @@ const ClientsWrapper: FC = () => {
 
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                         <div>
-                          <p className="text-xs text-muted-foreground">Faktúr</p>
+                          <p className="text-xs text-muted-foreground">
+                            Faktúr
+                          </p>
                           <p className="font-semibold text-foreground">—</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Celkom</p>
+                          <p className="text-xs text-muted-foreground">
+                            Celkom
+                          </p>
                           <p className="font-semibold text-foreground">—</p>
                         </div>
                       </div>
@@ -148,7 +154,7 @@ const ClientsWrapper: FC = () => {
                       disabled={page >= pagination.pages}
                       onClick={() =>
                         setPage((p) =>
-                          pagination && p < pagination.pages ? p + 1 : p
+                          pagination && p < pagination.pages ? p + 1 : p,
                         )
                       }
                     >
