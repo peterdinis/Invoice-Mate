@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import Client from "@/models/Client";
 import connectToDB from "@/lib/mongoose";
 
-// GET with pagination
 export async function GET(req: NextRequest) {
   await connectToDB();
 
