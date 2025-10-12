@@ -50,9 +50,15 @@ const ModeToggle: FC = () => {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("light")}>
+          Light
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>
+          Dark
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>
+          System
+        </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -85,7 +91,6 @@ const AuthWrapper: FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
-      
       {/* Mode toggle vpravo hore */}
       <div className="absolute top-4 right-4">
         <ModeToggle />
@@ -109,7 +114,10 @@ const AuthWrapper: FC = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2">
+            <label
+              htmlFor="email"
+              className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2"
+            >
               Email Address
             </label>
             <input
@@ -119,11 +127,18 @@ const AuthWrapper: FC = () => {
               className={`w-full px-4 py-3 border ${errors.email ? "border-red-400 focus:ring-red-400" : "border-slate-300 focus:ring-slate-900"} rounded-lg focus:ring-2 focus:border-transparent transition-all`}
               placeholder="you@example.com"
             />
-            {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
+            {errors.email && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.email.message}
+              </p>
+            )}
           </div>
 
           <div className="relative">
-            <label htmlFor="password" className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2">
+            <label
+              htmlFor="password"
+              className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2"
+            >
               Password
             </label>
             <input
@@ -140,7 +155,11 @@ const AuthWrapper: FC = () => {
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
-            {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
+            {errors.password && (
+              <p className="text-sm text-red-600 mt-1">
+                {errors.password.message}
+              </p>
+            )}
           </div>
 
           {mutation.isError && (
@@ -154,7 +173,11 @@ const AuthWrapper: FC = () => {
             disabled={mutation.isPending}
             className="w-full bg-slate-900 text-white py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {mutation.isPending ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
+            {mutation.isPending
+              ? "Please wait..."
+              : isSignUp
+                ? "Sign Up"
+                : "Sign In"}
           </button>
         </form>
 
@@ -163,7 +186,9 @@ const AuthWrapper: FC = () => {
             onClick={() => setIsSignUp(!isSignUp)}
             className="text-slate-600 dark:text-sky-100 hover:text-slate-900 text-sm transition-colors"
           >
-            {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
+            {isSignUp
+              ? "Already have an account? Sign in"
+              : "Don't have an account? Sign up"}
           </button>
         </div>
       </div>
