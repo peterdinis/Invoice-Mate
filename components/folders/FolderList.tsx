@@ -5,6 +5,7 @@ import { Folder, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFolders } from "@/hooks/folder/useFolders";
+import { Spinner } from "../ui/spinner";
 
 interface FolderListProps {
   selectedFolder: string | null;
@@ -46,7 +47,9 @@ export const FolderList = ({
   };
 
   if (isLoading)
-    return <p className="text-center py-4">Načítavam priečinky...</p>;
+    return <p className="text-center py-4">
+      <Spinner />
+    </p>;
   if (isError)
     return (
       <p className="text-center py-4 text-red-500">
