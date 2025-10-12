@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   Dialog,
@@ -11,6 +13,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useCreateFolder } from "@/hooks/folder/useCreateFolder";
+
+const folderSchema = z.object({
+  name: z
+    .string()
+    .min(1, "Zadajte názov priečinka")
+    .max(100, "Názov je príliš dlhý"),
+  description: z.string().optional(),
+});
+
+type FolderFormValues = z.infer<typeof folderSchema>;
 
 interface FolderDialogProps {
   onFolderCreated?: (name: string) => void;
@@ -18,18 +34,30 @@ interface FolderDialogProps {
 
 export const FolderDialog = ({ onFolderCreated }: FolderDialogProps) => {
   const [open, setOpen] = useState(false);
-  const [folderName, setFolderName] = useState("");
+  const { mutate: createFolder, isPending } = useCreateFolder();
 
-  const handleCreate = () => {
-    if (!folderName.trim()) {
-      toast.error("Zadajte názov priečinka");
-      return;
-    }
+  const {
+    register,
+    handleSubmit,
+    reset,
+    formState: { errors },
+  } = useForm<FolderFormValues>({
+    resolver: zodResolver(folderSchema),
+    defaultValues: { name: "", description: "" },
+  });
 
-    onFolderCreated?.(folderName);
-    toast.success("Priečinok bol vytvorený");
-    setFolderName("");
-    setOpen(false);
+  const onSubmit = (data: FolderFormValues) => {
+    createFolder(data, {
+      onSuccess: (newFolder) => {
+        toast.success("Priečinok bol vytvorený");
+        onFolderCreated?.(newFolder.name);
+        reset();
+        setOpen(false);
+      },
+      onError: (error: any) => {
+        toast.error(error.message || "Nepodarilo sa vytvoriť priečinok");
+      },
+    });
   };
 
   return (
@@ -40,28 +68,53 @@ export const FolderDialog = ({ onFolderCreated }: FolderDialogProps) => {
           Nový priečinok
         </Button>
       </DialogTrigger>
+
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Vytvoriť nový priečinok</DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="folderName">Názov priečinka</Label>
+            <Label htmlFor="name">Názov priečinka</Label>
             <Input
-              id="folderName"
+              id="name"
               placeholder="napr. Projekt 2025"
-              value={folderName}
-              onChange={(e) => setFolderName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && handleCreate()}
+              {...register("name")}
             />
+            {errors.name && (
+              <p className="text-sm text-red-500">{errors.name.message}</p>
+            )}
           </div>
-          <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => setOpen(false)}>
+
+          <div className="space-y-2">
+            <Label htmlFor="description">Popis (voliteľný)</Label>
+            <Input
+              id="description"
+              placeholder="napr. materiály k projektu"
+              {...register("description")}
+            />
+            {errors.description && (
+              <p className="text-sm text-red-500">
+                {errors.description.message}
+              </p>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-2 pt-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+              disabled={isPending}
+            >
               Zrušiť
             </Button>
-            <Button onClick={handleCreate}>Vytvoriť</Button>
+            <Button type="submit" disabled={isPending}>
+              {isPending ? "Vytváranie..." : "Vytvoriť"}
+            </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
   );

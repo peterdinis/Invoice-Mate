@@ -1,4 +1,4 @@
-import mongoose, { Schema, Document } from "mongoose";
+import mongoose, { Schema, Document, Types } from "mongoose";
 
 export interface ILineItem {
   description: string;
@@ -17,6 +17,7 @@ export interface IInvoice extends Document {
   lineItems: ILineItem[];
   notes?: string;
   total: number;
+  folder: Types.ObjectId; // 🔗 referencia na Folder
   createdAt: Date;
   updatedAt: Date;
 }
@@ -39,6 +40,11 @@ const InvoiceSchema = new Schema<IInvoice>(
     lineItems: { type: [LineItemSchema], default: [] },
     notes: { type: String },
     total: { type: Number, required: true, default: 0 },
+    folder: {
+      type: Schema.Types.ObjectId,
+      ref: "Folder",
+      required: true,
+    },
   },
   { timestamps: true },
 );

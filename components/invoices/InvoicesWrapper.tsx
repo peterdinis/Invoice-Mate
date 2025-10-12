@@ -1,79 +1,154 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, useState, useMemo } from "react";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  useReactTable,
+} from "@tanstack/react-table";
+import { Plus, Search, Eye, Edit, Trash2 } from "lucide-react";
+
 import DashboardNavigation from "../dashboard/DashboardNavigation";
-import { Plus, Search, Badge, Eye, Edit, Trash2 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
-import Link from "next/link";
 import { Input } from "../ui/input";
 import CustomLink from "../shared/CustomLink";
 import { FolderDialog } from "../folders/FolderDialog";
 import { FolderList } from "../folders/FolderList";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationNext,
+  PaginationPrevious,
+  PaginationLink,
+} from "@/components/ui/pagination";
 
-const mockInvoices = [
-  {
-    id: "INV-001",
-    client: "Acme Corporation",
-    amount: "$5,280",
-    status: "paid",
-    date: "2025-10-05",
-  },
-  {
-    id: "INV-002",
-    client: "Tech Startup Inc",
-    amount: "$3,420",
-    status: "pending",
-    date: "2025-10-03",
-  },
-  {
-    id: "INV-003",
-    client: "Design Studio LLC",
-    amount: "$7,890",
-    status: "paid",
-    date: "2025-10-01",
-  },
-  {
-    id: "INV-004",
-    client: "Marketing Agency",
-    amount: "$2,150",
-    status: "overdue",
-    date: "2025-09-28",
-  },
-  {
-    id: "INV-005",
-    client: "Consulting Firm",
-    amount: "$4,560",
-    status: "pending",
-    date: "2025-09-25",
-  },
-  {
-    id: "INV-006",
-    client: "E-commerce Store",
-    amount: "$8,920",
-    status: "paid",
-    date: "2025-09-22",
-  },
+interface Invoice {
+  id: string;
+  client: string;
+  amount: string;
+  status: "paid" | "pending" | "overdue";
+  date: string;
+}
+
+const mockInvoices: Invoice[] = [
+  { id: "INV-001", client: "Acme Corporation", amount: "$5,280", status: "paid", date: "2025-10-05" },
+  { id: "INV-002", client: "Tech Startup Inc", amount: "$3,420", status: "pending", date: "2025-10-03" },
+  { id: "INV-003", client: "Design Studio LLC", amount: "$7,890", status: "paid", date: "2025-10-01" },
+  { id: "INV-004", client: "Marketing Agency", amount: "$2,150", status: "overdue", date: "2025-09-28" },
+  { id: "INV-005", client: "Consulting Firm", amount: "$4,560", status: "pending", date: "2025-09-25" },
+  { id: "INV-006", client: "E-commerce Store", amount: "$8,920", status: "paid", date: "2025-09-22" },
+  { id: "INV-007", client: "WebWorks Ltd", amount: "$3,750", status: "paid", date: "2025-09-20" },
+  { id: "INV-008", client: "Cloudify", amount: "$9,320", status: "pending", date: "2025-09-15" },
+  { id: "INV-009", client: "DataCorp", amount: "$12,500", status: "paid", date: "2025-09-12" },
+  { id: "INV-010", client: "GreenEnergy", amount: "$2,990", status: "overdue", date: "2025-09-10" },
 ];
 
 const statusConfig = {
-  paid: {
-    label: "Zaplatené",
-    className: "bg-success/10 text-success hover:bg-success/20",
-  },
-  pending: {
-    label: "Čakajúce",
-    className: "bg-warning/10 text-warning hover:bg-warning/20",
-  },
-  overdue: {
-    label: "Po splatnosti",
-    className: "bg-destructive/10 text-destructive hover:bg-destructive/20",
-  },
+  paid: { label: "Zaplatené", className: "bg-success/10 text-success hover:bg-success/20" },
+  pending: { label: "Čakajúce", className: "bg-warning/10 text-warning hover:bg-warning/20" },
+  overdue: { label: "Po splatnosti", className: "bg-destructive/10 text-destructive hover:bg-destructive/20" },
 };
+
+const ITEMS_PER_PAGE = 5;
 
 const InvoicesWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
+  const [pageIndex, setPageIndex] = useState(0);
+
+  const filteredData = useMemo(
+    () =>
+      mockInvoices.filter(
+        (invoice) =>
+          invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          invoice.id.toLowerCase().includes(searchTerm.toLowerCase())
+      ),
+    [searchTerm]
+  );
+
+  // ✨ Explicit generic in ColumnDef and table
+  const columns: ColumnDef<Invoice, any>[] = [
+    {
+      accessorKey: "id",
+      header: "Číslo",
+      cell: (info) => <span className="font-medium">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: "client",
+      header: "Klient",
+    },
+    {
+      accessorKey: "amount",
+      header: "Suma",
+      cell: (info) => <span className="font-semibold">{info.getValue() as string}</span>,
+    },
+    {
+      accessorKey: "status",
+      header: "Stav",
+      cell: (info) => {
+        const status = info.getValue() as keyof typeof statusConfig;
+        const cfg = statusConfig[status];
+        return (
+          <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${cfg.className}`}>
+            {cfg.label}
+          </span>
+        );
+      },
+    },
+    {
+      accessorKey: "date",
+      header: "Dátum",
+      cell: (info) => <span className="text-muted-foreground">{info.getValue() as string}</span>,
+    },
+    {
+      id: "actions",
+      header: "Akcie",
+      cell: ({ row }) => (
+        <div className="flex justify-end gap-2">
+          <CustomLink href={`/invoices/${row.original.id}`}>
+            <Button variant="ghost" size="icon">
+              <Eye className="w-4 h-4" />
+            </Button>
+          </CustomLink>
+          <CustomLink href={`/invoices/${row.original.id}/edit`}>
+            <Button variant="ghost" size="icon">
+              <Edit className="w-4 h-4" />
+            </Button>
+          </CustomLink>
+          <Button variant="ghost" size="icon">
+            <Trash2 className="w-4 h-4 text-destructive" />
+          </Button>
+        </div>
+      ),
+    },
+  ];
+
+  // ✅ useReactTable generic to match data type
+  const table = useReactTable<Invoice>({
+    data: filteredData,
+    columns,
+    state: {
+      pagination: { pageIndex, pageSize: ITEMS_PER_PAGE },
+    },
+    onPaginationChange: (updater) => {
+      // updater can be function or object
+      if (typeof updater === "function") {
+        setPageIndex((old) => updater({ pageIndex: old, pageSize: ITEMS_PER_PAGE }).pageIndex);
+      } else {
+        setPageIndex(updater.pageIndex);
+      }
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    // filtered row model not necessary since we filter outside, but can be enabled
+    manualPagination: false,
+  });
+
+  const totalPages = table.getPageCount();
 
   return (
     <>
@@ -82,12 +157,8 @@ const InvoicesWrapper: FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">
-                Faktúry
-              </h1>
-              <p className="text-muted-foreground mt-2">
-                Spravujte a sledujte všetky vaše faktúry
-              </p>
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text">Faktúry</h1>
+              <p className="text-muted-foreground mt-2">Spravujte a sledujte všetky vaše faktúry</p>
             </div>
             <CustomLink href="/invoices/new">
               <Button className="gap-2" size="lg">
@@ -103,10 +174,7 @@ const InvoicesWrapper: FC = () => {
                 <h3 className="font-semibold text-foreground">Priečinky</h3>
                 <FolderDialog />
               </div>
-              <FolderList
-                selectedFolder={selectedFolder}
-                onFolderSelect={setSelectedFolder}
-              />
+              <FolderList selectedFolder={selectedFolder} onFolderSelect={setSelectedFolder} />
             </Card>
 
             <Card className="p-6 bg-gradient-card lg:col-span-3">
@@ -116,7 +184,10 @@ const InvoicesWrapper: FC = () => {
                   <Input
                     placeholder="Hľadať faktúry..."
                     value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setPageIndex(0); // reset to first page when searching
+                    }}
                     className="pl-10"
                   />
                 </div>
@@ -125,82 +196,53 @@ const InvoicesWrapper: FC = () => {
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="border-b border-border">
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Číslo
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Klient
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Suma
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Stav
-                      </th>
-                      <th className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Dátum
-                      </th>
-                      <th className="text-right py-3 px-4 text-sm font-semibold text-muted-foreground">
-                        Akcie
-                      </th>
-                    </tr>
+                    {table.getHeaderGroups().map((hg) => (
+                      <tr key={hg.id} className="border-b border-border">
+                        {hg.headers.map((header) => (
+                          <th key={header.id} className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground">
+                            {flexRender(header.column.columnDef.header, header.getContext())}
+                          </th>
+                        ))}
+                      </tr>
+                    ))}
                   </thead>
                   <tbody>
-                    {mockInvoices.map((invoice) => (
-                      <tr
-                        key={invoice.id}
-                        className="border-b border-border hover:bg-muted/50 transition-colors"
-                      >
-                        <td className="py-4 px-4 font-medium text-foreground">
-                          {invoice.id}
-                        </td>
-                        <td className="py-4 px-4 text-foreground">
-                          {invoice.client}
-                        </td>
-                        <td className="py-4 px-4 font-semibold text-foreground">
-                          {invoice.amount}
-                        </td>
-                        <td className="py-4 px-4">
-                          <Badge
-                            className={
-                              statusConfig[
-                                invoice.status as keyof typeof statusConfig
-                              ].className
-                            }
-                          >
-                            {
-                              statusConfig[
-                                invoice.status as keyof typeof statusConfig
-                              ].label
-                            }
-                          </Badge>
-                        </td>
-                        <td className="py-4 px-4 text-muted-foreground">
-                          {invoice.date}
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex justify-end gap-2">
-                            <CustomLink href={`/invoices/${invoice.id}`}>
-                              <Button variant="ghost" size="icon">
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </CustomLink>
-                            <CustomLink href={`/invoices/${invoice.id}/edit`}>
-                              <Button variant="ghost" size="icon">
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            </CustomLink>
-                            <Button variant="ghost" size="icon">
-                              <Trash2 className="w-4 h-4 text-destructive" />
-                            </Button>
-                          </div>
-                        </td>
+                    {table.getRowModel().rows.map((row) => (
+                      <tr key={row.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                        {row.getVisibleCells().map((cell) => (
+                          <td key={cell.id} className="py-4 px-4">
+                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                          </td>
+                        ))}
                       </tr>
                     ))}
                   </tbody>
                 </table>
               </div>
+
+              {totalPages > 1 && (
+                <div className="mt-6">
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious onClick={() => table.previousPage()} className={!table.getCanPreviousPage() ? "opacity-50 pointer-events-none" : ""} />
+                      </PaginationItem>
+
+                      {Array.from({ length: totalPages }, (_, i) => (
+                        <PaginationItem key={i}>
+                          <PaginationLink onClick={() => table.setPageIndex(i)} isActive={pageIndex === i}>
+                            {i + 1}
+                          </PaginationLink>
+                        </PaginationItem>
+                      ))}
+
+                      <PaginationItem>
+                        <PaginationNext onClick={() => table.nextPage()} className={!table.getCanNextPage() ? "opacity-50 pointer-events-none" : ""} />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              )}
             </Card>
           </div>
         </div>
