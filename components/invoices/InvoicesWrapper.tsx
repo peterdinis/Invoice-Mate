@@ -157,7 +157,7 @@ const InvoicesWrapper: FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text text-transparent">Faktúry</h1>
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text">Faktúry</h1>
               <p className="text-muted-foreground mt-2">Spravujte a sledujte všetky vaše faktúry</p>
             </div>
             <CustomLink href="/invoices/new">
