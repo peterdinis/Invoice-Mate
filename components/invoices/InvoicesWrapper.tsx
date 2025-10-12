@@ -8,6 +8,8 @@ import { Card } from "../ui/card";
 import Link from "next/link";
 import { Input } from "../ui/input";
 import CustomLink from "../shared/CustomLink";
+import { FolderDialog } from "../folders/FolderDialog";
+import { FolderList } from "../folders/FolderList";
 
 const mockInvoices = [
   {
@@ -99,9 +101,12 @@ const InvoicesWrapper: FC = () => {
             <Card className="p-6 bg-gradient-card lg:col-span-1">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-semibold text-foreground">Priečinky</h3>
-                Folder DIALOG TODO
+                <FolderDialog />
               </div>
-              FOLDER LIST TODO
+              <FolderList
+                selectedFolder={selectedFolder}
+                onFolderSelect={setSelectedFolder}
+              />
             </Card>
 
             <Card className="p-6 bg-gradient-card lg:col-span-3">
