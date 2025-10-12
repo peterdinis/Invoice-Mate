@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,7 +26,12 @@ interface ClientDialogProps {
   trigger?: React.ReactNode;
 }
 
-export const ClientDialog = ({ mode = "create", client, onSave, trigger }: ClientDialogProps) => {
+export const ClientDialog = ({
+  mode = "create",
+  client,
+  onSave,
+  trigger,
+}: ClientDialogProps) => {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: client?.name || "",
@@ -37,7 +48,9 @@ export const ClientDialog = ({ mode = "create", client, onSave, trigger }: Clien
     }
 
     onSave?.(formData);
-    toast.success(mode === "create" ? "Klient bol vytvorený" : "Klient bol upravený");
+    toast.success(
+      mode === "create" ? "Klient bol vytvorený" : "Klient bol upravený",
+    );
     setOpen(false);
   };
 
@@ -46,7 +59,11 @@ export const ClientDialog = ({ mode = "create", client, onSave, trigger }: Clien
       <DialogTrigger asChild>
         {trigger || (
           <Button className="gap-2">
-            {mode === "create" ? <Plus className="w-4 h-4" /> : <Edit className="w-4 h-4" />}
+            {mode === "create" ? (
+              <Plus className="w-4 h-4" />
+            ) : (
+              <Edit className="w-4 h-4" />
+            )}
             {mode === "create" ? "Nový klient" : "Upraviť"}
           </Button>
         )}
@@ -64,7 +81,9 @@ export const ClientDialog = ({ mode = "create", client, onSave, trigger }: Clien
               <Input
                 id="name"
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Zadajte meno alebo názov firmy"
               />
             </div>
@@ -74,18 +93,22 @@ export const ClientDialog = ({ mode = "create", client, onSave, trigger }: Clien
                 id="email"
                 type="email"
                 value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, email: e.target.value })
+                }
                 placeholder="email@priklad.sk"
               />
             </div>
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="phone">Telefón</Label>
             <Input
               id="phone"
               value={formData.phone}
-              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, phone: e.target.value })
+              }
               placeholder="+421 XXX XXX XXX"
             />
           </div>
@@ -95,7 +118,9 @@ export const ClientDialog = ({ mode = "create", client, onSave, trigger }: Clien
             <Textarea
               id="address"
               value={formData.address}
-              onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, address: e.target.value })
+              }
               placeholder="Ulica, PSČ Mesto"
               rows={3}
             />
@@ -106,7 +131,9 @@ export const ClientDialog = ({ mode = "create", client, onSave, trigger }: Clien
             <Textarea
               id="note"
               value={formData.note}
-              onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, note: e.target.value })
+              }
               placeholder="Doplňujúce informácie o klientovi..."
               rows={3}
             />

@@ -28,7 +28,7 @@ const ClientSchema = new Schema<IClient>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 ClientSchema.virtual("invoices", {

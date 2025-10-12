@@ -47,9 +47,11 @@ export const FolderList = ({
   };
 
   if (isLoading)
-    return <p className="text-center py-4">
-      <Spinner />
-    </p>;
+    return (
+      <p className="text-center py-4">
+        <Spinner />
+      </p>
+    );
   if (isError)
     return (
       <p className="text-center py-4 text-red-500">
