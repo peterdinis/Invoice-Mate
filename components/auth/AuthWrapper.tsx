@@ -84,24 +84,24 @@ const AuthWrapper: FC = () => {
   const onSubmit = (data: FormValues) => mutation.mutate(data);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center p-4 relative">
+    <div className="min-h-screen flex items-center justify-center p-4 relative">
       
       {/* Mode toggle vpravo hore */}
       <div className="absolute top-4 right-4">
         <ModeToggle />
       </div>
 
-      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-8">
+      <div className="bg-zinc-100 dark:bg-stone-800 rounded-2xl shadow-xl w-full max-w-md p-8">
         <div className="flex justify-center mb-6">
           <div className="bg-slate-900 text-white p-4 rounded-2xl">
             {isSignUp ? <UserPlus size={32} /> : <LogIn size={32} />}
           </div>
         </div>
 
-        <h1 className="text-3xl font-bold text-center text-slate-900 mb-2">
+        <h1 className="text-3xl font-bold text-center text-slate-900 dark:text-sky-100 mb-2">
           {isSignUp ? "Create Account" : "Welcome Back"}
         </h1>
-        <p className="text-center text-slate-600 mb-8">
+        <p className="text-center text-slate-600 dark:text-sky-100 mb-8">
           {isSignUp
             ? "Sign up to manage your invoices with ease"
             : "Sign in to access your invoices"}
@@ -109,7 +109,7 @@ const AuthWrapper: FC = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="email" className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2">
               Email Address
             </label>
             <input
@@ -123,7 +123,7 @@ const AuthWrapper: FC = () => {
           </div>
 
           <div className="relative">
-            <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+            <label htmlFor="password" className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2">
               Password
             </label>
             <input
@@ -161,7 +161,7 @@ const AuthWrapper: FC = () => {
         <div className="mt-6 text-center">
           <button
             onClick={() => setIsSignUp(!isSignUp)}
-            className="text-slate-600 hover:text-slate-900 text-sm transition-colors"
+            className="text-slate-600 dark:text-sky-100 hover:text-slate-900 text-sm transition-colors"
           >
             {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
           </button>
