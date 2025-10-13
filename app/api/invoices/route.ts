@@ -1,21 +1,38 @@
 import { NextResponse } from "next/server";
 import Invoice from "@/models/Invoice";
-import Folder from "@/models/Folder";
 import connectToDB from "@/lib/auth/mongoose";
+import Folder from "@/models/Folder";
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     await connectToDB();
-    const invoices = await Invoice.find()
-      .populate("folder")
-      .sort({ createdAt: -1 });
-    return NextResponse.json(invoices, { status: 200 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { message: "Failed to fetch invoices" },
-      { status: 500 },
-    );
+
+    const { searchParams } = new URL(req.url);
+    const page = parseInt(searchParams.get("page") || "1");
+    const limit = parseInt(searchParams.get("limit") || "10");
+
+    const skip = (page - 1) * limit;
+
+    const [invoices, total] = await Promise.all([
+      Invoice.find()
+        .populate("client folder")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit),
+      Invoice.countDocuments(),
+    ]);
+
+    return NextResponse.json({
+      invoices,
+      pagination: {
+        total,
+        page,
+        pages: Math.ceil(total / limit),
+      },
+    });
+  } catch (error: any) {
+    console.error("Pagination error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
 
