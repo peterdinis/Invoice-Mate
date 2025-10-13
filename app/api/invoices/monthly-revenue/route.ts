@@ -12,10 +12,10 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     const monthsData = [];
 
-    // Získaj dáta pre posledných X mesiacov
-    for (let i = months - 1; i >= 0; i--) {
-      const monthDate = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const nextMonth = new Date(now.getFullYear(), now.getMonth() - i + 1, 1);
+    // Získaj dáta od aktuálneho mesiaca do budúcnosti
+    for (let i = 0; i < months; i++) {
+      const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const nextMonth = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
 
       const revenue = await Invoice.aggregate([
         {
