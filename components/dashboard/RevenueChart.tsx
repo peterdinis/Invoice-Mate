@@ -25,12 +25,16 @@ const data = [
 
 export const RevenueChart = () => {
   return (
-    <Suspense fallback={<div className="flex items-center gap-4 [--radius:1.2rem]">
-      <Badge>
-        <Spinner />
-        Syncing
-      </Badge>
-    </div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center gap-4 [--radius:1.2rem]">
+          <Badge>
+            <Spinner />
+            Syncing
+          </Badge>
+        </div>
+      }
+    >
       <Card style={{ padding: "1.5rem" }}>
         <h3
           style={{
@@ -50,7 +54,11 @@ export const RevenueChart = () => {
               </linearGradient>
             </defs>
 
-            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" opacity={0.3} />
+            <CartesianGrid
+              strokeDasharray="3 3"
+              stroke="#e5e7eb"
+              opacity={0.3}
+            />
 
             <XAxis
               dataKey="month"

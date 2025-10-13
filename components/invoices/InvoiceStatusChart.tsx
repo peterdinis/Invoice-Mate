@@ -21,12 +21,16 @@ const data = [
 
 export const InvoiceStatusChart = () => {
   return (
-    <Suspense fallback={<div className="flex items-center gap-4 [--radius:1.2rem]">
-      <Badge>
-        <Spinner />
-        Syncing
-      </Badge>
-    </div>}>
+    <Suspense
+      fallback={
+        <div className="flex items-center gap-4 [--radius:1.2rem]">
+          <Badge>
+            <Spinner />
+            Syncing
+          </Badge>
+        </div>
+      }
+    >
       <Card style={{ padding: "1.5rem" }}>
         <h3
           style={{

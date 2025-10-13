@@ -38,22 +38,91 @@ interface Invoice {
 }
 
 const mockInvoices: Invoice[] = [
-  { id: "INV-001", client: "Acme Corporation", amount: "$5,280", status: "paid", date: "2025-10-05" },
-  { id: "INV-002", client: "Tech Startup Inc", amount: "$3,420", status: "pending", date: "2025-10-03" },
-  { id: "INV-003", client: "Design Studio LLC", amount: "$7,890", status: "paid", date: "2025-10-01" },
-  { id: "INV-004", client: "Marketing Agency", amount: "$2,150", status: "overdue", date: "2025-09-28" },
-  { id: "INV-005", client: "Consulting Firm", amount: "$4,560", status: "pending", date: "2025-09-25" },
-  { id: "INV-006", client: "E-commerce Store", amount: "$8,920", status: "paid", date: "2025-09-22" },
-  { id: "INV-007", client: "WebWorks Ltd", amount: "$3,750", status: "paid", date: "2025-09-20" },
-  { id: "INV-008", client: "Cloudify", amount: "$9,320", status: "pending", date: "2025-09-15" },
-  { id: "INV-009", client: "DataCorp", amount: "$12,500", status: "paid", date: "2025-09-12" },
-  { id: "INV-010", client: "GreenEnergy", amount: "$2,990", status: "overdue", date: "2025-09-10" },
+  {
+    id: "INV-001",
+    client: "Acme Corporation",
+    amount: "$5,280",
+    status: "paid",
+    date: "2025-10-05",
+  },
+  {
+    id: "INV-002",
+    client: "Tech Startup Inc",
+    amount: "$3,420",
+    status: "pending",
+    date: "2025-10-03",
+  },
+  {
+    id: "INV-003",
+    client: "Design Studio LLC",
+    amount: "$7,890",
+    status: "paid",
+    date: "2025-10-01",
+  },
+  {
+    id: "INV-004",
+    client: "Marketing Agency",
+    amount: "$2,150",
+    status: "overdue",
+    date: "2025-09-28",
+  },
+  {
+    id: "INV-005",
+    client: "Consulting Firm",
+    amount: "$4,560",
+    status: "pending",
+    date: "2025-09-25",
+  },
+  {
+    id: "INV-006",
+    client: "E-commerce Store",
+    amount: "$8,920",
+    status: "paid",
+    date: "2025-09-22",
+  },
+  {
+    id: "INV-007",
+    client: "WebWorks Ltd",
+    amount: "$3,750",
+    status: "paid",
+    date: "2025-09-20",
+  },
+  {
+    id: "INV-008",
+    client: "Cloudify",
+    amount: "$9,320",
+    status: "pending",
+    date: "2025-09-15",
+  },
+  {
+    id: "INV-009",
+    client: "DataCorp",
+    amount: "$12,500",
+    status: "paid",
+    date: "2025-09-12",
+  },
+  {
+    id: "INV-010",
+    client: "GreenEnergy",
+    amount: "$2,990",
+    status: "overdue",
+    date: "2025-09-10",
+  },
 ];
 
 const statusConfig = {
-  paid: { label: "Zaplatené", className: "bg-success/10 text-success hover:bg-success/20" },
-  pending: { label: "Čakajúce", className: "bg-warning/10 text-warning hover:bg-warning/20" },
-  overdue: { label: "Po splatnosti", className: "bg-destructive/10 text-destructive hover:bg-destructive/20" },
+  paid: {
+    label: "Zaplatené",
+    className: "bg-success/10 text-success hover:bg-success/20",
+  },
+  pending: {
+    label: "Čakajúce",
+    className: "bg-warning/10 text-warning hover:bg-warning/20",
+  },
+  overdue: {
+    label: "Po splatnosti",
+    className: "bg-destructive/10 text-destructive hover:bg-destructive/20",
+  },
 };
 
 const ITEMS_PER_PAGE = 5;
@@ -76,35 +145,60 @@ const InvoicesWrapper: FC = () => {
   );
 
   const columns: ColumnDef<Invoice, any>[] = [
-    { accessorKey: "id", header: "Číslo", enableSorting: true, cell: (info) => <span className="font-medium">{info.getValue() as string}</span> },
-    { accessorKey: "client", header: "Klient" },
-    { 
-      accessorKey: "amount", 
-      header: "Suma", 
-      enableSorting: true, 
-      cell: (info) => <span className="font-semibold">{info.getValue() as string}</span>,
-      sortingFn: (a, b) => {
-        const aVal = parseFloat(a.getValue<string>("amount").replace(/[$,]/g, ""));
-        const bVal = parseFloat(b.getValue<string>("amount").replace(/[$,]/g, ""));
-        return aVal - bVal;
-      }
+    {
+      accessorKey: "id",
+      header: "Číslo",
+      enableSorting: true,
+      cell: (info) => (
+        <span className="font-medium">{info.getValue() as string}</span>
+      ),
     },
-    { 
-      accessorKey: "status", 
-      header: "Stav", 
-      enableSorting: true, 
+    { accessorKey: "client", header: "Klient" },
+    {
+      accessorKey: "amount",
+      header: "Suma",
+      enableSorting: true,
+      cell: (info) => (
+        <span className="font-semibold">{info.getValue() as string}</span>
+      ),
+      sortingFn: (a, b) => {
+        const aVal = parseFloat(
+          a.getValue<string>("amount").replace(/[$,]/g, ""),
+        );
+        const bVal = parseFloat(
+          b.getValue<string>("amount").replace(/[$,]/g, ""),
+        );
+        return aVal - bVal;
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Stav",
+      enableSorting: true,
       cell: (info) => {
         const status = info.getValue() as keyof typeof statusConfig;
         const cfg = statusConfig[status];
-        return <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${cfg.className}`}>{cfg.label}</span>;
-      } 
+        return (
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${cfg.className}`}
+          >
+            {cfg.label}
+          </span>
+        );
+      },
     },
-    { 
-      accessorKey: "date", 
-      header: "Dátum", 
+    {
+      accessorKey: "date",
+      header: "Dátum",
       enableSorting: true,
-      cell: (info) => <span className="text-muted-foreground">{info.getValue() as string}</span>,
-      sortingFn: (a, b) => new Date(a.getValue<string>("date")).getTime() - new Date(b.getValue<string>("date")).getTime()
+      cell: (info) => (
+        <span className="text-muted-foreground">
+          {info.getValue() as string}
+        </span>
+      ),
+      sortingFn: (a, b) =>
+        new Date(a.getValue<string>("date")).getTime() -
+        new Date(b.getValue<string>("date")).getTime(),
     },
     {
       id: "actions",
@@ -112,12 +206,18 @@ const InvoicesWrapper: FC = () => {
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
           <CustomLink href={`/invoices/${row.original.id}`}>
-            <Button variant="ghost" size="icon"><Eye className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon">
+              <Eye className="w-4 h-4" />
+            </Button>
           </CustomLink>
           <CustomLink href={`/invoices/${row.original.id}/edit`}>
-            <Button variant="ghost" size="icon"><Edit className="w-4 h-4" /></Button>
+            <Button variant="ghost" size="icon">
+              <Edit className="w-4 h-4" />
+            </Button>
           </CustomLink>
-          <Button variant="ghost" size="icon"><Trash2 className="w-4 h-4 text-destructive" /></Button>
+          <Button variant="ghost" size="icon">
+            <Trash2 className="w-4 h-4 text-destructive" />
+          </Button>
         </div>
       ),
     },
@@ -129,7 +229,10 @@ const InvoicesWrapper: FC = () => {
     state: { pagination: { pageIndex, pageSize: ITEMS_PER_PAGE }, sorting },
     onPaginationChange: (updater) => {
       if (typeof updater === "function") {
-        setPageIndex((old) => updater({ pageIndex: old, pageSize: ITEMS_PER_PAGE }).pageIndex);
+        setPageIndex(
+          (old) =>
+            updater({ pageIndex: old, pageSize: ITEMS_PER_PAGE }).pageIndex,
+        );
       } else {
         setPageIndex(updater.pageIndex);
       }
@@ -157,11 +260,18 @@ const InvoicesWrapper: FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text">Faktúry</h1>
-              <p className="text-muted-foreground mt-2">Spravujte a sledujte všetky vaše faktúry</p>
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text">
+                Faktúry
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Spravujte a sledujte všetky vaše faktúry
+              </p>
             </div>
             <CustomLink href="/invoices/new">
-              <Button className="gap-2" size="lg"><Plus className="w-5 h-5" />Nová faktúra</Button>
+              <Button className="gap-2" size="lg">
+                <Plus className="w-5 h-5" />
+                Nová faktúra
+              </Button>
             </CustomLink>
           </div>
 
@@ -171,7 +281,10 @@ const InvoicesWrapper: FC = () => {
                 <h3 className="font-semibold text-foreground">Priečinky</h3>
                 <FolderDialog />
               </div>
-              <FolderList selectedFolder={selectedFolder} onFolderSelect={setSelectedFolder} />
+              <FolderList
+                selectedFolder={selectedFolder}
+                onFolderSelect={setSelectedFolder}
+              />
             </Card>
 
             <Card className="p-6 bg-gradient-card lg:col-span-3">
@@ -181,24 +294,33 @@ const InvoicesWrapper: FC = () => {
                   <Input
                     placeholder="Hľadať faktúry..."
                     value={searchTerm}
-                    onChange={(e) => { setSearchTerm(e.target.value); setPageIndex(0); }}
+                    onChange={(e) => {
+                      setSearchTerm(e.target.value);
+                      setPageIndex(0);
+                    }}
                     className="pl-10"
                   />
                 </div>
               </div>
 
-              <div ref={tableContainerRef} className="overflow-auto max-h-[500px]">
+              <div
+                ref={tableContainerRef}
+                className="overflow-auto max-h-[500px]"
+              >
                 <table className="w-full">
                   <thead>
-                    {table.getHeaderGroups().map(hg => (
+                    {table.getHeaderGroups().map((hg) => (
                       <tr key={hg.id} className="border-b border-border">
-                        {hg.headers.map(header => (
+                        {hg.headers.map((header) => (
                           <th
                             key={header.id}
                             className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground cursor-pointer select-none"
                             onClick={header.column.getToggleSortingHandler()}
                           >
-                            {flexRender(header.column.columnDef.header, header.getContext())}
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext(),
+                            )}
                             {{
                               asc: " 🔼",
                               desc: " 🔽",
@@ -208,24 +330,32 @@ const InvoicesWrapper: FC = () => {
                       </tr>
                     ))}
                   </thead>
-                  <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
-                    {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                  <tbody
+                    style={{
+                      height: `${rowVirtualizer.getTotalSize()}px`,
+                      position: "relative",
+                    }}
+                  >
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
                       const row = table.getRowModel().rows[virtualRow.index];
                       return (
                         <tr
                           key={row.id}
                           style={{
-                            position: 'absolute',
+                            position: "absolute",
                             top: 0,
                             left: 0,
-                            width: '100%',
+                            width: "100%",
                             transform: `translateY(${virtualRow.start}px)`,
                           }}
                           className="border-b border-border hover:bg-muted/50 transition-colors"
                         >
-                          {row.getVisibleCells().map(cell => (
+                          {row.getVisibleCells().map((cell) => (
                             <td key={cell.id} className="py-4 px-4">
-                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
                             </td>
                           ))}
                         </tr>
@@ -242,13 +372,20 @@ const InvoicesWrapper: FC = () => {
                       <PaginationItem>
                         <PaginationPrevious
                           onClick={() => table.previousPage()}
-                          className={!table.getCanPreviousPage() ? "opacity-50 pointer-events-none" : ""}
+                          className={
+                            !table.getCanPreviousPage()
+                              ? "opacity-50 pointer-events-none"
+                              : ""
+                          }
                         />
                       </PaginationItem>
 
                       {Array.from({ length: totalPages }, (_, i) => (
                         <PaginationItem key={i}>
-                          <PaginationLink onClick={() => table.setPageIndex(i)} isActive={pageIndex === i}>
+                          <PaginationLink
+                            onClick={() => table.setPageIndex(i)}
+                            isActive={pageIndex === i}
+                          >
                             {i + 1}
                           </PaginationLink>
                         </PaginationItem>
@@ -257,7 +394,11 @@ const InvoicesWrapper: FC = () => {
                       <PaginationItem>
                         <PaginationNext
                           onClick={() => table.nextPage()}
-                          className={!table.getCanNextPage() ? "opacity-50 pointer-events-none" : ""}
+                          className={
+                            !table.getCanNextPage()
+                              ? "opacity-50 pointer-events-none"
+                              : ""
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>

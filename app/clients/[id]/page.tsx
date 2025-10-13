@@ -1,9 +1,7 @@
 import { NextPage } from "next";
 
 const ClientsDetailPage: NextPage = () => {
-    return (
-        <>Detail</>
-    )
-}
+  return <>Detail</>;
+};
 
-export default ClientsDetailPage
+export default ClientsDetailPage;

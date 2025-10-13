@@ -23,7 +23,7 @@ const ClientsWrapper: FC = () => {
     limit: 9,
     searchTerm,
   });
-  const {toast} = useToast();
+  const { toast } = useToast();
   const clients = data?.data ?? [];
   const pagination = data?.pagination;
 
@@ -99,19 +99,22 @@ const ClientsWrapper: FC = () => {
                       className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
                     >
                       <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center">
-                        </div>
+                        <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center"></div>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon">
-                            <Mail onClick={() => {
-                              copyToClipboard(client.email)
-                              console.log("Test")
-                              toast({
-                                title: "Email bol skopírovaný",
-                                duration: 2000,
-                                className: "bg-green-800 text-white font-bold text-base"
-                              })
-                            }} className="w-4 h-4" />
+                            <Mail
+                              onClick={() => {
+                                copyToClipboard(client.email);
+                                console.log("Test");
+                                toast({
+                                  title: "Email bol skopírovaný",
+                                  duration: 2000,
+                                  className:
+                                    "bg-green-800 text-white font-bold text-base",
+                                });
+                              }}
+                              className="w-4 h-4"
+                            />
                           </Button>
                           <Button variant="ghost" size="icon">
                             <Link href={`/clients/${client._id}`}>
