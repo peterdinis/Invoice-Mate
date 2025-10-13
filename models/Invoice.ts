@@ -8,6 +8,7 @@ export interface ILineItem {
 }
 
 export interface IInvoice extends Document {
+  client: Types.ObjectId;
   clientName: string;
   clientEmail: string;
   clientAddress?: string;
@@ -17,7 +18,7 @@ export interface IInvoice extends Document {
   lineItems: ILineItem[];
   notes?: string;
   total: number;
-  folder: Types.ObjectId; // 🔗 referencia na Folder
+  folder: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -31,6 +32,11 @@ const LineItemSchema = new Schema<ILineItem>({
 
 const InvoiceSchema = new Schema<IInvoice>(
   {
+    client: {
+      type: Schema.Types.ObjectId,
+      ref: "Client",
+      required: true,
+    },
     clientName: { type: String, required: true },
     clientEmail: { type: String, required: true },
     clientAddress: { type: String },
