@@ -10,11 +10,12 @@ import { ClientDialog } from "./ClientDialog";
 import { useClients } from "@/hooks/clients/useClients";
 import { Skeleton } from "../ui/skeleton";
 import { motion } from "framer-motion";
+import { useCopyToClipboard } from "@uidotdev/usehooks";
 
 const ClientsWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-
+  const [copiedText, copyToClipboard] = useCopyToClipboard();
   const { data, isLoading, isError, isFetching } = useClients({
     page,
     limit: 9,
