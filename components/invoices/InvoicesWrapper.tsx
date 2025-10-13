@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState, useMemo } from "react";
+import { FC, useState, useMemo, useRef } from "react";
 import {
   ColumnDef,
   flexRender,
@@ -10,6 +10,7 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Plus, Search, Eye, Edit, Trash2 } from "lucide-react";
 
 import DashboardNavigation from "../dashboard/DashboardNavigation";
@@ -62,6 +63,7 @@ const InvoicesWrapper: FC = () => {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredData = useMemo(
     () =>
@@ -82,10 +84,9 @@ const InvoicesWrapper: FC = () => {
       enableSorting: true, 
       cell: (info) => <span className="font-semibold">{info.getValue() as string}</span>,
       sortingFn: (a, b) => {
-        // Odstrániť $ a čiarky pre číselné porovnanie
         const aVal = parseFloat(a.getValue<string>("amount").replace(/[$,]/g, ""));
         const bVal = parseFloat(b.getValue<string>("amount").replace(/[$,]/g, ""));
-        return aVal > bVal ? 1 : aVal < bVal ? -1 : 0;
+        return aVal - bVal;
       }
     },
     { 
@@ -140,6 +141,13 @@ const InvoicesWrapper: FC = () => {
     manualPagination: false,
   });
 
+  const rowVirtualizer = useVirtualizer({
+    count: table.getRowModel().rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 52,
+    overscan: 5,
+  });
+
   const totalPages = table.getPageCount();
 
   return (
@@ -179,12 +187,12 @@ const InvoicesWrapper: FC = () => {
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div ref={tableContainerRef} className="overflow-auto max-h-[500px]">
                 <table className="w-full">
                   <thead>
-                    {table.getHeaderGroups().map((hg) => (
+                    {table.getHeaderGroups().map(hg => (
                       <tr key={hg.id} className="border-b border-border">
-                        {hg.headers.map((header) => (
+                        {hg.headers.map(header => (
                           <th
                             key={header.id}
                             className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground cursor-pointer select-none"
@@ -200,14 +208,29 @@ const InvoicesWrapper: FC = () => {
                       </tr>
                     ))}
                   </thead>
-                  <tbody>
-                    {table.getRowModel().rows.map((row) => (
-                      <tr key={row.id} className="border-b border-border hover:bg-muted/50 transition-colors">
-                        {row.getVisibleCells().map((cell) => (
-                          <td key={cell.id} className="py-4 px-4">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
-                        ))}
-                      </tr>
-                    ))}
+                  <tbody style={{ height: `${rowVirtualizer.getTotalSize()}px`, position: 'relative' }}>
+                    {rowVirtualizer.getVirtualItems().map(virtualRow => {
+                      const row = table.getRowModel().rows[virtualRow.index];
+                      return (
+                        <tr
+                          key={row.id}
+                          style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            width: '100%',
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                          className="border-b border-border hover:bg-muted/50 transition-colors"
+                        >
+                          {row.getVisibleCells().map(cell => (
+                            <td key={cell.id} className="py-4 px-4">
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
