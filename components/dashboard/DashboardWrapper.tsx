@@ -26,6 +26,7 @@ import { jsPDF } from "jspdf";
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
 import { Spinner } from "../ui/spinner";
+import { useInvoiceStats } from "@/hooks/invoices/useInvoicesStats";
 
 const reportData = [
   { faktura: "001", klient: "Firma A", suma: 1200, stav: "Zaplatené" },
@@ -34,6 +35,8 @@ const reportData = [
 ];
 
 const DashboardWrapper: FC = () => {
+  const { data: stats, isLoading, isError } = useInvoiceStats();
+
   const downloadPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(18);
@@ -50,7 +53,6 @@ const DashboardWrapper: FC = () => {
     doc.save("report.pdf");
   };
 
-  // Excel generovanie
   const downloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(reportData);
     const workbook = XLSX.utils.book_new();
@@ -64,6 +66,28 @@ const DashboardWrapper: FC = () => {
     });
     saveAs(data, "report.xlsx");
   };
+
+  if (isLoading) {
+    return (
+      <Suspense fallback={<Spinner />}>
+        <DashboardNavigation />
+        <main className="min-h-screen bg-background flex items-center justify-center">
+          <Spinner />
+        </main>
+      </Suspense>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Suspense fallback={<Spinner />}>
+        <DashboardNavigation />
+        <main className="min-h-screen bg-background flex items-center justify-center">
+          <p className="text-destructive">Chyba pri načítaní štatistík</p>
+        </main>
+      </Suspense>
+    );
+  }
 
   return (
     <Suspense fallback={<Spinner />}>
@@ -110,31 +134,31 @@ const DashboardWrapper: FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <DashboardStatCard
                 title="Celkový príjem"
-                value="€48,574"
+                value={`€${stats?.totalRevenue.toLocaleString('sk-SK', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}`}
                 icon={DollarSign}
-                trend="+12.5%"
-                trendUp={true}
+                trend={`${stats?.revenueChange! > 0 ? '+' : ''}${stats?.revenueChange || 0}%`}
+                trendUp={stats?.revenueChange! > 0}
               />
               <DashboardStatCard
                 title="Čakajúce"
-                value="€12,340"
+                value={`€${stats?.thisMonthRevenue.toLocaleString('sk-SK', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}`}
                 icon={Clock}
-                trend="8 faktúr"
+                trend={`${stats?.thisMonthInvoices || 0} faktúr`}
                 variant="warning"
               />
               <DashboardStatCard
                 title="Zaplatené tento mesiac"
-                value="€28,450"
+                value={`€${stats?.thisMonthRevenue.toLocaleString('sk-SK', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}`}
                 icon={TrendingUp}
-                trend="+8.2%"
-                trendUp={true}
+                trend={`${stats?.revenueChange! > 0 ? '+' : ''}${stats?.revenueChange || 0}%`}
+                trendUp={stats?.revenueChange! > 0}
                 variant="success"
               />
               <DashboardStatCard
                 title="Celkom faktúr"
-                value="156"
+                value={`${stats?.totalInvoices || 0}`}
                 icon={FileText}
-                trend="+23 tento mesiac"
+                trend={`${stats?.invoiceChange! > 0 ? '+' : ''}${stats?.invoiceChange || 0} tento mesiac`}
               />
             </div>
           </section>
