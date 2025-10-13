@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Client from "@/models/Client";
-import connectToDB from "@/lib/mongoose";
+import connectToDB from "@/lib/auth/mongoose";
 
 export async function GET(req: NextRequest) {
   await connectToDB();

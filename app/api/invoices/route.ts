@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import Invoice from "@/models/Invoice";
 import Folder from "@/models/Folder";
-import connectToDB from "@/lib/mongoose";
+import connectToDB from "@/lib/auth/mongoose";
 
 export async function GET() {
   try {

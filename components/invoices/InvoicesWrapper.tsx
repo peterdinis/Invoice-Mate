@@ -1,13 +1,16 @@
 "use client";
 
-import { FC, useState, useMemo } from "react";
+import { FC, useState, useMemo, useRef } from "react";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
   getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
+  SortingState,
 } from "@tanstack/react-table";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Plus, Search, Eye, Edit, Trash2 } from "lucide-react";
 
 import DashboardNavigation from "../dashboard/DashboardNavigation";
@@ -128,6 +131,8 @@ const InvoicesWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(0);
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const tableContainerRef = useRef<HTMLDivElement>(null);
 
   const filteredData = useMemo(
     () =>
@@ -139,29 +144,37 @@ const InvoicesWrapper: FC = () => {
     [searchTerm],
   );
 
-  // ✨ Explicit generic in ColumnDef and table
   const columns: ColumnDef<Invoice, any>[] = [
     {
       accessorKey: "id",
       header: "Číslo",
+      enableSorting: true,
       cell: (info) => (
         <span className="font-medium">{info.getValue() as string}</span>
       ),
     },
-    {
-      accessorKey: "client",
-      header: "Klient",
-    },
+    { accessorKey: "client", header: "Klient" },
     {
       accessorKey: "amount",
       header: "Suma",
+      enableSorting: true,
       cell: (info) => (
         <span className="font-semibold">{info.getValue() as string}</span>
       ),
+      sortingFn: (a, b) => {
+        const aVal = parseFloat(
+          a.getValue<string>("amount").replace(/[$,]/g, ""),
+        );
+        const bVal = parseFloat(
+          b.getValue<string>("amount").replace(/[$,]/g, ""),
+        );
+        return aVal - bVal;
+      },
     },
     {
       accessorKey: "status",
       header: "Stav",
+      enableSorting: true,
       cell: (info) => {
         const status = info.getValue() as keyof typeof statusConfig;
         const cfg = statusConfig[status];
@@ -177,11 +190,15 @@ const InvoicesWrapper: FC = () => {
     {
       accessorKey: "date",
       header: "Dátum",
+      enableSorting: true,
       cell: (info) => (
         <span className="text-muted-foreground">
           {info.getValue() as string}
         </span>
       ),
+      sortingFn: (a, b) =>
+        new Date(a.getValue<string>("date")).getTime() -
+        new Date(b.getValue<string>("date")).getTime(),
     },
     {
       id: "actions",
@@ -206,15 +223,11 @@ const InvoicesWrapper: FC = () => {
     },
   ];
 
-  // ✅ useReactTable generic to match data type
   const table = useReactTable<Invoice>({
     data: filteredData,
     columns,
-    state: {
-      pagination: { pageIndex, pageSize: ITEMS_PER_PAGE },
-    },
+    state: { pagination: { pageIndex, pageSize: ITEMS_PER_PAGE }, sorting },
     onPaginationChange: (updater) => {
-      // updater can be function or object
       if (typeof updater === "function") {
         setPageIndex(
           (old) =>
@@ -224,10 +237,18 @@ const InvoicesWrapper: FC = () => {
         setPageIndex(updater.pageIndex);
       }
     },
+    onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
-    // filtered row model not necessary since we filter outside, but can be enabled
+    getSortedRowModel: getSortedRowModel(),
     manualPagination: false,
+  });
+
+  const rowVirtualizer = useVirtualizer({
+    count: table.getRowModel().rows.length,
+    getScrollElement: () => tableContainerRef.current,
+    estimateSize: () => 52,
+    overscan: 5,
   });
 
   const totalPages = table.getPageCount();
@@ -275,14 +296,17 @@ const InvoicesWrapper: FC = () => {
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
-                      setPageIndex(0); // reset to first page when searching
+                      setPageIndex(0);
                     }}
                     className="pl-10"
                   />
                 </div>
               </div>
 
-              <div className="overflow-x-auto">
+              <div
+                ref={tableContainerRef}
+                className="overflow-auto max-h-[500px]"
+              >
                 <table className="w-full">
                   <thead>
                     {table.getHeaderGroups().map((hg) => (
@@ -290,33 +314,53 @@ const InvoicesWrapper: FC = () => {
                         {hg.headers.map((header) => (
                           <th
                             key={header.id}
-                            className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground"
+                            className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground cursor-pointer select-none"
+                            onClick={header.column.getToggleSortingHandler()}
                           >
                             {flexRender(
                               header.column.columnDef.header,
                               header.getContext(),
                             )}
+                            {{
+                              asc: " 🔼",
+                              desc: " 🔽",
+                            }[header.column.getIsSorted() as string] ?? null}
                           </th>
                         ))}
                       </tr>
                     ))}
                   </thead>
-                  <tbody>
-                    {table.getRowModel().rows.map((row) => (
-                      <tr
-                        key={row.id}
-                        className="border-b border-border hover:bg-muted/50 transition-colors"
-                      >
-                        {row.getVisibleCells().map((cell) => (
-                          <td key={cell.id} className="py-4 px-4">
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext(),
-                            )}
-                          </td>
-                        ))}
-                      </tr>
-                    ))}
+                  <tbody
+                    style={{
+                      height: `${rowVirtualizer.getTotalSize()}px`,
+                      position: "relative",
+                    }}
+                  >
+                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+                      const row = table.getRowModel().rows[virtualRow.index];
+                      return (
+                        <tr
+                          key={row.id}
+                          style={{
+                            position: "absolute",
+                            top: 0,
+                            left: 0,
+                            width: "100%",
+                            transform: `translateY(${virtualRow.start}px)`,
+                          }}
+                          className="border-b border-border hover:bg-muted/50 transition-colors"
+                        >
+                          {row.getVisibleCells().map((cell) => (
+                            <td key={cell.id} className="py-4 px-4">
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </td>
+                          ))}
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
