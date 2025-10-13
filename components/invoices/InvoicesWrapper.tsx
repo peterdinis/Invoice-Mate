@@ -10,7 +10,7 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { Plus, Search, Eye, Edit, Trash2, Loader2 } from "lucide-react";
+import { Plus, Search, Eye, Edit, Trash2, Loader2, GhostIcon } from "lucide-react";
 
 import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { Button } from "../ui/button";
@@ -28,6 +28,7 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination";
 import { usePaginatedInvoices } from "@/hooks/invoices/usePaginatedInovices";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
 
 interface Invoice {
   id: string;
@@ -224,9 +225,15 @@ const InvoicesWrapper: FC = () => {
                 </div>
               ) : filteredData.length === 0 ? (
                 <div className="text-center py-12">
-                  <p className="text-muted-foreground">
-                    Žiadne faktúry neboli nájdené
-                  </p>
+                  <Empty>
+                    <EmptyHeader>
+                      <EmptyMedia variant="icon">
+                        <GhostIcon className="animate-bounce w-8 h-8" />
+                      </EmptyMedia>
+                      <EmptyTitle>No data</EmptyTitle>
+                      <EmptyDescription>No data found</EmptyDescription>
+                    </EmptyHeader>
+                  </Empty>
                 </div>
               ) : (
                 <div className="overflow-auto">

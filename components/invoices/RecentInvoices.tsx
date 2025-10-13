@@ -47,7 +47,7 @@ export const RecentInvoices = () => {
         <Empty>
           <EmptyHeader>
             <EmptyMedia variant="icon">
-              <Ghost />
+              <Ghost className="animate-bounce w-8 h-8" />
             </EmptyMedia>
             <EmptyTitle>Chyba</EmptyTitle>
             <EmptyDescription>Nepodarilo sa načítať faktúry</EmptyDescription>
