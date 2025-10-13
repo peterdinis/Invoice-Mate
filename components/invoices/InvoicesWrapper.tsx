@@ -1,17 +1,16 @@
+
 "use client";
 
-import { FC, useState, useMemo, useRef } from "react";
+import { FC, useState, useMemo } from "react";
 import {
   ColumnDef,
   flexRender,
   getCoreRowModel,
-  getPaginationRowModel,
   getSortedRowModel,
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { Plus, Search, Eye, Edit, Trash2 } from "lucide-react";
+import { Plus, Search, Eye, Edit, Trash2, Loader2 } from "lucide-react";
 
 import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { Button } from "../ui/button";
@@ -28,6 +27,7 @@ import {
   PaginationPrevious,
   PaginationLink,
 } from "@/components/ui/pagination";
+import { usePaginatedInvoices } from "@/hooks/invoices/usePaginatedInovices";
 
 interface Invoice {
   id: string;
@@ -36,79 +36,6 @@ interface Invoice {
   status: "paid" | "pending" | "overdue";
   date: string;
 }
-
-const mockInvoices: Invoice[] = [
-  {
-    id: "INV-001",
-    client: "Acme Corporation",
-    amount: "$5,280",
-    status: "paid",
-    date: "2025-10-05",
-  },
-  {
-    id: "INV-002",
-    client: "Tech Startup Inc",
-    amount: "$3,420",
-    status: "pending",
-    date: "2025-10-03",
-  },
-  {
-    id: "INV-003",
-    client: "Design Studio LLC",
-    amount: "$7,890",
-    status: "paid",
-    date: "2025-10-01",
-  },
-  {
-    id: "INV-004",
-    client: "Marketing Agency",
-    amount: "$2,150",
-    status: "overdue",
-    date: "2025-09-28",
-  },
-  {
-    id: "INV-005",
-    client: "Consulting Firm",
-    amount: "$4,560",
-    status: "pending",
-    date: "2025-09-25",
-  },
-  {
-    id: "INV-006",
-    client: "E-commerce Store",
-    amount: "$8,920",
-    status: "paid",
-    date: "2025-09-22",
-  },
-  {
-    id: "INV-007",
-    client: "WebWorks Ltd",
-    amount: "$3,750",
-    status: "paid",
-    date: "2025-09-20",
-  },
-  {
-    id: "INV-008",
-    client: "Cloudify",
-    amount: "$9,320",
-    status: "pending",
-    date: "2025-09-15",
-  },
-  {
-    id: "INV-009",
-    client: "DataCorp",
-    amount: "$12,500",
-    status: "paid",
-    date: "2025-09-12",
-  },
-  {
-    id: "INV-010",
-    client: "GreenEnergy",
-    amount: "$2,990",
-    status: "overdue",
-    date: "2025-09-10",
-  },
-];
 
 const statusConfig = {
   paid: {
@@ -130,19 +57,19 @@ const ITEMS_PER_PAGE = 5;
 const InvoicesWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
-  const [pageIndex, setPageIndex] = useState(0);
+  const [pageIndex, setPageIndex] = useState(1);
   const [sorting, setSorting] = useState<SortingState>([]);
-  const tableContainerRef = useRef<HTMLDivElement>(null);
 
-  const filteredData = useMemo(
-    () =>
-      mockInvoices.filter(
-        (invoice) =>
-          invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          invoice.id.toLowerCase().includes(searchTerm.toLowerCase()),
-      ),
-    [searchTerm],
-  );
+  const { data, isLoading, isError, error } = usePaginatedInvoices(pageIndex, ITEMS_PER_PAGE);
+
+  const filteredData = useMemo(() => {
+    if (!data?.invoices) return [];
+    return data.invoices.filter(
+      (invoice: Invoice) =>
+        invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        invoice.id.toLowerCase().includes(searchTerm.toLowerCase()),
+    );
+  }, [data?.invoices, searchTerm]);
 
   const columns: ColumnDef<Invoice, any>[] = [
     {
@@ -226,32 +153,15 @@ const InvoicesWrapper: FC = () => {
   const table = useReactTable<Invoice>({
     data: filteredData,
     columns,
-    state: { pagination: { pageIndex, pageSize: ITEMS_PER_PAGE }, sorting },
-    onPaginationChange: (updater) => {
-      if (typeof updater === "function") {
-        setPageIndex(
-          (old) =>
-            updater({ pageIndex: old, pageSize: ITEMS_PER_PAGE }).pageIndex,
-        );
-      } else {
-        setPageIndex(updater.pageIndex);
-      }
-    },
+    state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    manualPagination: false,
+    manualPagination: true,
+    pageCount: data?.totalPages || 0,
   });
 
-  const rowVirtualizer = useVirtualizer({
-    count: table.getRowModel().rows.length,
-    getScrollElement: () => tableContainerRef.current,
-    estimateSize: () => 52,
-    overscan: 5,
-  });
-
-  const totalPages = table.getPageCount();
+  const totalPages = data?.totalPages || 0;
 
   return (
     <>
@@ -296,86 +206,99 @@ const InvoicesWrapper: FC = () => {
                     value={searchTerm}
                     onChange={(e) => {
                       setSearchTerm(e.target.value);
-                      setPageIndex(0);
                     }}
                     className="pl-10"
                   />
                 </div>
               </div>
 
-              <div
-                ref={tableContainerRef}
-                className="overflow-auto max-h-[500px]"
-              >
-                <table className="w-full">
-                  <thead>
-                    {table.getHeaderGroups().map((hg) => (
-                      <tr key={hg.id} className="border-b border-border">
-                        {hg.headers.map((header) => (
-                          <th
-                            key={header.id}
-                            className="text-left py-3 px-4 text-sm font-semibold text-muted-foreground cursor-pointer select-none"
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            {flexRender(
-                              header.column.columnDef.header,
-                              header.getContext(),
-                            )}
-                            {{
-                              asc: " 🔼",
-                              desc: " 🔽",
-                            }[header.column.getIsSorted() as string] ?? null}
-                          </th>
-                        ))}
+              {isLoading ? (
+                <div className="flex justify-center items-center py-12">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary" />
+                </div>
+              ) : isError ? (
+                <div className="text-center py-12">
+                  <p className="text-destructive">
+                    Chyba pri načítaní faktúr: {error?.message}
+                  </p>
+                </div>
+              ) : filteredData.length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-muted-foreground">
+                    Žiadne faktúry neboli nájdené
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-border bg-muted/50">
+                        {table.getHeaderGroups().map((headerGroup) =>
+                          headerGroup.headers.map((header) => (
+                            <th
+                              key={header.id}
+                              className="text-left py-3 px-4 font-semibold text-sm"
+                            >
+                              {header.isPlaceholder ? null : (
+                                <div
+                                  className={
+                                    header.column.getCanSort()
+                                      ? "cursor-pointer select-none flex items-center gap-2"
+                                      : ""
+                                  }
+                                  onClick={header.column.getToggleSortingHandler()}
+                                >
+                                  {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext()
+                                  )}
+                                  {header.column.getCanSort() && (
+                                    <span className="text-xs">
+                                      {{
+                                        asc: "↑",
+                                        desc: "↓",
+                                      }[header.column.getIsSorted() as string] ?? "↕"}
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+                            </th>
+                          ))
+                        )}
                       </tr>
-                    ))}
-                  </thead>
-                  <tbody
-                    style={{
-                      height: `${rowVirtualizer.getTotalSize()}px`,
-                      position: "relative",
-                    }}
-                  >
-                    {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                      const row = table.getRowModel().rows[virtualRow.index];
-                      return (
+                    </thead>
+                    <tbody>
+                      {table.getRowModel().rows.map((row) => (
                         <tr
                           key={row.id}
-                          style={{
-                            position: "absolute",
-                            top: 0,
-                            left: 0,
-                            width: "100%",
-                            transform: `translateY(${virtualRow.start}px)`,
-                          }}
                           className="border-b border-border hover:bg-muted/50 transition-colors"
                         >
                           {row.getVisibleCells().map((cell) => (
                             <td key={cell.id} className="py-4 px-4">
                               {flexRender(
                                 cell.column.columnDef.cell,
-                                cell.getContext(),
+                                cell.getContext()
                               )}
                             </td>
                           ))}
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
 
-              {totalPages > 1 && (
+              {totalPages > 1 && !isLoading && (
                 <div className="mt-6">
                   <Pagination>
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
-                          onClick={() => table.previousPage()}
+                          onClick={() => setPageIndex((prev) => Math.max(1, prev - 1))}
                           className={
-                            !table.getCanPreviousPage()
+                            pageIndex === 1
                               ? "opacity-50 pointer-events-none"
-                              : ""
+                              : "cursor-pointer"
                           }
                         />
                       </PaginationItem>
@@ -383,8 +306,9 @@ const InvoicesWrapper: FC = () => {
                       {Array.from({ length: totalPages }, (_, i) => (
                         <PaginationItem key={i}>
                           <PaginationLink
-                            onClick={() => table.setPageIndex(i)}
-                            isActive={pageIndex === i}
+                            onClick={() => setPageIndex(i + 1)}
+                            isActive={pageIndex === i + 1}
+                            className="cursor-pointer"
                           >
                             {i + 1}
                           </PaginationLink>
@@ -393,11 +317,11 @@ const InvoicesWrapper: FC = () => {
 
                       <PaginationItem>
                         <PaginationNext
-                          onClick={() => table.nextPage()}
+                          onClick={() => setPageIndex((prev) => Math.min(totalPages, prev + 1))}
                           className={
-                            !table.getCanNextPage()
+                            pageIndex === totalPages
                               ? "opacity-50 pointer-events-none"
-                              : ""
+                              : "cursor-pointer"
                           }
                         />
                       </PaginationItem>
