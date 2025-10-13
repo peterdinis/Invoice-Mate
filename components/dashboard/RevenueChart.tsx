@@ -13,21 +13,53 @@ import {
 import { Suspense } from "react";
 import { Badge } from "../ui/badge";
 import { Spinner } from "../ui/spinner";
-
-const data = [
-  { month: "Máj", revenue: 12400 },
-  { month: "Jún", revenue: 18200 },
-  { month: "Júl", revenue: 15800 },
-  { month: "Aug", revenue: 22100 },
-  { month: "Sep", revenue: 19500 },
-  { month: "Okt", revenue: 28450 },
-];
+import { useMonthlyRevenue } from "@/hooks/invoices/useMonthyRevenue";
 
 export const RevenueChart = () => {
+  const { data, isLoading, isError } = useMonthlyRevenue(6);
+
+  if (isLoading) {
+    return (
+      <Card style={{ padding: "1.5rem" }}>
+        <h3
+          style={{
+            fontSize: "1.125rem",
+            fontWeight: 600,
+            marginBottom: "1rem",
+          }}
+        >
+          Vývoj príjmov
+        </h3>
+        <div className="flex items-center justify-center h-[300px]">
+          <Spinner />
+        </div>
+      </Card>
+    );
+  }
+
+  if (isError || !data) {
+    return (
+      <Card style={{ padding: "1.5rem" }}>
+        <h3
+          style={{
+            fontSize: "1.125rem",
+            fontWeight: 600,
+            marginBottom: "1rem",
+          }}
+        >
+          Vývoj príjmov
+        </h3>
+        <div className="flex items-center justify-center h-[300px]">
+          <p className="text-destructive">Chyba pri načítaní dát</p>
+        </div>
+      </Card>
+    );
+  }
+
   return (
     <Suspense
       fallback={
-        <div className="flex items-center gap-4 [--radius:1.2rem]">
+        <div className="flex items-center gap-4">
           <Badge>
             <Spinner />
             Syncing
