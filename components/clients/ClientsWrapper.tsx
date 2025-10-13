@@ -11,17 +11,19 @@ import { useClients } from "@/hooks/clients/useClients";
 import { Skeleton } from "../ui/skeleton";
 import { motion } from "framer-motion";
 import { useCopyToClipboard } from "@uidotdev/usehooks";
+import { useToast } from "@/hooks/shared/use-toast";
+import Link from "next/link";
 
 const ClientsWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
-  const [copiedText, copyToClipboard] = useCopyToClipboard();
+  const [, copyToClipboard] = useCopyToClipboard();
   const { data, isLoading, isError, isFetching } = useClients({
     page,
     limit: 9,
     searchTerm,
   });
-
+  const {toast} = useToast();
   const clients = data?.data ?? [];
   const pagination = data?.pagination;
 
@@ -98,16 +100,23 @@ const ClientsWrapper: FC = () => {
                     >
                       <div className="flex items-start justify-between mb-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">
-                            {client.name.charAt(0)}
-                          </span>
                         </div>
                         <div className="flex gap-1">
                           <Button variant="ghost" size="icon">
-                            <Mail className="w-4 h-4" />
+                            <Mail onClick={() => {
+                              copyToClipboard(client.email)
+                              console.log("Test")
+                              toast({
+                                title: "Email bol skopírovaný",
+                                duration: 2000,
+                                className: "bg-green-800 text-white font-bold text-base"
+                              })
+                            }} className="w-4 h-4" />
                           </Button>
                           <Button variant="ghost" size="icon">
-                            <Eye className="w-4 h-4" />
+                            <Link href={`/clients/${client._id}`}>
+                              <Eye className="w-4 h-4" />
+                            </Link>
                           </Button>
                         </div>
                       </div>
