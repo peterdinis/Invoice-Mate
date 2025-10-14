@@ -43,12 +43,21 @@ import {
   EmptyTitle,
 } from "../ui/empty";
 
+// Definujte správny interface pre Invoice
 interface Invoice {
-  id: string;
-  client: string;
-  amount: string;
-  status: "paid" | "pending" | "overdue";
-  date: string;
+  _id: string;
+  invoiceNumber: string;
+  client: {
+    _id: string;
+    name: string;
+    email: string;
+  } | string; // Môže byť string (ID) alebo populated objekt
+  total: number;
+  status: "paid" | "pending" | "overdue" | "draft";
+  invoiceDate: string;
+  dueDate: string;
+  createdAt: string;
+  updatedAt: string;
 }
 
 const statusConfig = {
@@ -63,6 +72,10 @@ const statusConfig = {
   overdue: {
     label: "Po splatnosti",
     className: "bg-destructive/10 text-destructive hover:bg-destructive/20",
+  },
+  draft: {
+    label: "Koncept",
+    className: "bg-muted/10 text-muted-foreground hover:bg-muted/20",
   },
 };
 
@@ -82,38 +95,50 @@ const InvoicesWrapper: FC = () => {
   const filteredData = useMemo(() => {
     if (!data?.invoices) return [];
     return data.invoices.filter(
-      (invoice: Invoice) =>
-        invoice.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        invoice.id.toLowerCase().includes(searchTerm.toLowerCase()),
+      (invoice: Invoice) => {
+        const clientName = typeof invoice.client === 'object' 
+          ? invoice.client.name 
+          : 'Unknown Client';
+        
+        const invoiceNumber = invoice.invoiceNumber || invoice._id;
+        
+        return (
+          clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+      }
     );
   }, [data?.invoices, searchTerm]);
 
   const columns: ColumnDef<Invoice, any>[] = [
     {
-      accessorKey: "id",
+      accessorKey: "invoiceNumber",
       header: "Číslo",
       enableSorting: true,
       cell: (info) => (
         <span className="font-medium">{info.getValue() as string}</span>
       ),
     },
-    { accessorKey: "client", header: "Klient" },
     {
-      accessorKey: "amount",
+      accessorKey: "client",
+      header: "Klient",
+      cell: (info) => {
+        const client = info.getValue();
+        const clientName = typeof client === 'object' 
+          ? client.name 
+          : 'Unknown Client';
+        return <span>{clientName}</span>;
+      },
+    },
+    {
+      accessorKey: "total",
       header: "Suma",
       enableSorting: true,
       cell: (info) => (
-        <span className="font-semibold">{info.getValue() as string}</span>
+        <span className="font-semibold">
+          ${(info.getValue() as number).toFixed(2)}
+        </span>
       ),
-      sortingFn: (a, b) => {
-        const aVal = parseFloat(
-          a.getValue<string>("amount").replace(/[$,]/g, ""),
-        );
-        const bVal = parseFloat(
-          b.getValue<string>("amount").replace(/[$,]/g, ""),
-        );
-        return aVal - bVal;
-      },
     },
     {
       accessorKey: "status",
@@ -121,7 +146,7 @@ const InvoicesWrapper: FC = () => {
       enableSorting: true,
       cell: (info) => {
         const status = info.getValue() as keyof typeof statusConfig;
-        const cfg = statusConfig[status];
+        const cfg = statusConfig[status] || statusConfig.draft;
         return (
           <span
             className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${cfg.className}`}
@@ -132,29 +157,29 @@ const InvoicesWrapper: FC = () => {
       },
     },
     {
-      accessorKey: "date",
+      accessorKey: "invoiceDate",
       header: "Dátum",
       enableSorting: true,
       cell: (info) => (
         <span className="text-muted-foreground">
-          {info.getValue() as string}
+          {new Date(info.getValue() as string).toLocaleDateString('sk-SK')}
         </span>
       ),
       sortingFn: (a, b) =>
-        new Date(a.getValue<string>("date")).getTime() -
-        new Date(b.getValue<string>("date")).getTime(),
+        new Date(a.getValue<string>("invoiceDate")).getTime() -
+        new Date(b.getValue<string>("invoiceDate")).getTime(),
     },
     {
       id: "actions",
       header: "Akcie",
       cell: ({ row }) => (
         <div className="flex justify-end gap-2">
-          <CustomLink href={`/invoices/${row.original.id}`}>
+          <CustomLink href={`/invoices/${row.original._id}`}>
             <Button variant="ghost" size="icon">
               <Eye className="w-4 h-4" />
             </Button>
           </CustomLink>
-          <CustomLink href={`/invoices/${row.original.id}/edit`}>
+          <CustomLink href={`/invoices/${row.original._id}/edit`}>
             <Button variant="ghost" size="icon">
               <Edit className="w-4 h-4" />
             </Button>
@@ -167,18 +192,25 @@ const InvoicesWrapper: FC = () => {
     },
   ];
 
+  const tableData = useMemo(() => {
+    return filteredData.map((invoice: { invoiceNumber: any; _id: any; }) => ({
+      ...invoice,
+      id: invoice.invoiceNumber || invoice._id, // Pre kompatibilitu s pôvodným kódom
+    }));
+  }, [filteredData]);
+
   const table = useReactTable<Invoice>({
-    data: filteredData,
+    data: tableData,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     manualPagination: true,
-    pageCount: data?.totalPages || 0,
+    pageCount: data?.pagination?.pages || 0,
   });
 
-  const totalPages = data?.totalPages || 0;
+  const totalPages = data?.pagination?.pages || 0;
 
   return (
     <>
@@ -246,8 +278,10 @@ const InvoicesWrapper: FC = () => {
                       <EmptyMedia variant="icon">
                         <GhostIcon className="animate-bounce w-8 h-8" />
                       </EmptyMedia>
-                      <EmptyTitle>No data</EmptyTitle>
-                      <EmptyDescription>No data found</EmptyDescription>
+                      <EmptyTitle>Žiadne faktúry</EmptyTitle>
+                      <EmptyDescription>
+                        {searchTerm ? 'Nenašli sa žiadne faktúry pre váš vyhľadávací výraz' : 'Zatiaľ nemáte žiadne faktúry'}
+                      </EmptyDescription>
                     </EmptyHeader>
                   </Empty>
                 </div>
