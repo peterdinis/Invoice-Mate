@@ -37,8 +37,18 @@ export async function GET(request: NextRequest) {
 
       // Formátuj názov mesiaca
       const monthNames = [
-        "Jan", "Feb", "Mar", "Apr", "Máj", "Jún",
-        "Júl", "Aug", "Sep", "Okt", "Nov", "Dec"
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "Máj",
+        "Jún",
+        "Júl",
+        "Aug",
+        "Sep",
+        "Okt",
+        "Nov",
+        "Dec",
       ];
 
       monthsData.push({
@@ -51,7 +61,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     return NextResponse.json(
       { error: "Failed to fetch monthly revenue", message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
