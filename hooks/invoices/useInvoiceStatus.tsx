@@ -5,6 +5,7 @@ export interface InvoiceStatusData {
   value: number;
   percentage: number;
   color: string;
+   [key: string]: unknown;
 }
 
 interface InvoiceStatusResponse {
@@ -17,11 +18,11 @@ export const useInvoiceStatus = () => {
     queryKey: ["invoiceStatus"],
     queryFn: async () => {
       const response = await fetch("/api/invoices/status-count");
-      
+
       if (!response.ok) {
         throw new Error("Failed to fetch invoice status data");
       }
-      
+
       return response.json();
     },
     refetchOnWindowFocus: false,

@@ -68,7 +68,9 @@ export const RecentInvoices = () => {
               <Ghost />
             </EmptyMedia>
             <EmptyTitle>Žiadne faktúry</EmptyTitle>
-            <EmptyDescription>Nie sú dostupné žiadne posledné faktúry</EmptyDescription>
+            <EmptyDescription>
+              Nie sú dostupné žiadne posledné faktúry
+            </EmptyDescription>
           </EmptyHeader>
           <EmptyContent>
             <CustomLink href="/invoices">
@@ -96,18 +98,24 @@ export const RecentInvoices = () => {
           >
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-1">
-                <p className="font-semibold text-foreground">{invoice.invoiceNumber}</p>
+                <p className="font-semibold text-foreground">
+                  {invoice.invoiceNumber}
+                </p>
                 <Badge
                   className={
-                    statusConfig[invoice.status as keyof typeof statusConfig].className
+                    statusConfig[invoice.status as keyof typeof statusConfig]
+                      .className
                   }
                 >
                   {
-                    statusConfig[invoice.status as keyof typeof statusConfig].label
+                    statusConfig[invoice.status as keyof typeof statusConfig]
+                      .label
                   }
                 </Badge>
               </div>
-              <p className="text-sm text-muted-foreground">{invoice.clientName}</p>
+              <p className="text-sm text-muted-foreground">
+                {invoice.clientName}
+              </p>
             </div>
 
             <div className="flex items-center gap-6">

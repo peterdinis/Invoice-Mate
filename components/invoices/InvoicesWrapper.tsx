@@ -1,4 +1,3 @@
-
 "use client";
 
 import { FC, useState, useMemo } from "react";
@@ -10,7 +9,15 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
-import { Plus, Search, Eye, Edit, Trash2, Loader2, GhostIcon } from "lucide-react";
+import {
+  Plus,
+  Search,
+  Eye,
+  Edit,
+  Trash2,
+  Loader2,
+  GhostIcon,
+} from "lucide-react";
 
 import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { Button } from "../ui/button";
@@ -28,7 +35,13 @@ import {
   PaginationLink,
 } from "@/components/ui/pagination";
 import { usePaginatedInvoices } from "@/hooks/invoices/usePaginatedInovices";
-import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "../ui/empty";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "../ui/empty";
 
 interface Invoice {
   id: string;
@@ -61,7 +74,10 @@ const InvoicesWrapper: FC = () => {
   const [pageIndex, setPageIndex] = useState(1);
   const [sorting, setSorting] = useState<SortingState>([]);
 
-  const { data, isLoading, isError, error } = usePaginatedInvoices(pageIndex, ITEMS_PER_PAGE);
+  const { data, isLoading, isError, error } = usePaginatedInvoices(
+    pageIndex,
+    ITEMS_PER_PAGE,
+  );
 
   const filteredData = useMemo(() => {
     if (!data?.invoices) return [];
@@ -257,20 +273,22 @@ const InvoicesWrapper: FC = () => {
                                 >
                                   {flexRender(
                                     header.column.columnDef.header,
-                                    header.getContext()
+                                    header.getContext(),
                                   )}
                                   {header.column.getCanSort() && (
                                     <span className="text-xs">
                                       {{
                                         asc: "↑",
                                         desc: "↓",
-                                      }[header.column.getIsSorted() as string] ?? "↕"}
+                                      }[
+                                        header.column.getIsSorted() as string
+                                      ] ?? "↕"}
                                     </span>
                                   )}
                                 </div>
                               )}
                             </th>
-                          ))
+                          )),
                         )}
                       </tr>
                     </thead>
@@ -284,7 +302,7 @@ const InvoicesWrapper: FC = () => {
                             <td key={cell.id} className="py-4 px-4">
                               {flexRender(
                                 cell.column.columnDef.cell,
-                                cell.getContext()
+                                cell.getContext(),
                               )}
                             </td>
                           ))}
@@ -301,7 +319,9 @@ const InvoicesWrapper: FC = () => {
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
-                          onClick={() => setPageIndex((prev) => Math.max(1, prev - 1))}
+                          onClick={() =>
+                            setPageIndex((prev) => Math.max(1, prev - 1))
+                          }
                           className={
                             pageIndex === 1
                               ? "opacity-50 pointer-events-none"
@@ -324,7 +344,11 @@ const InvoicesWrapper: FC = () => {
 
                       <PaginationItem>
                         <PaginationNext
-                          onClick={() => setPageIndex((prev) => Math.min(totalPages, prev + 1))}
+                          onClick={() =>
+                            setPageIndex((prev) =>
+                              Math.min(totalPages, prev + 1),
+                            )
+                          }
                           className={
                             pageIndex === totalPages
                               ? "opacity-50 pointer-events-none"

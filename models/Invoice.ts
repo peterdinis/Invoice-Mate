@@ -11,7 +11,7 @@ export enum InvoiceStatus {
   PAID = "paid",
   PENDING = "pending",
   OVERDUE = "overdue",
-  DRAFT = "draft"
+  DRAFT = "draft",
 }
 
 export interface IInvoice extends Document {

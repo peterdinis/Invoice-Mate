@@ -9,7 +9,11 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
     const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const firstDayOfLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const firstDayOfLastMonth = new Date(
+      now.getFullYear(),
+      now.getMonth() - 1,
+      1,
+    );
 
     const [
       totalRevenue,
@@ -25,7 +29,7 @@ export async function GET(request: NextRequest) {
         { $match: { status: "paid" } },
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]),
-      
+
       // This month revenue
       Invoice.aggregate([
         {
@@ -36,7 +40,7 @@ export async function GET(request: NextRequest) {
         },
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]),
-      
+
       // Last month revenue
       Invoice.aggregate([
         {
@@ -47,20 +51,20 @@ export async function GET(request: NextRequest) {
         },
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]),
-      
+
       // Total invoices
       Invoice.countDocuments(),
-      
+
       // This month invoices
       Invoice.countDocuments({
         invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
       }),
-      
+
       // Last month invoices
       Invoice.countDocuments({
         invoiceDate: { $gte: firstDayOfLastMonth, $lt: firstDayOfMonth },
       }),
-      
+
       // Paid invoices this month
       Invoice.countDocuments({
         status: "paid",
@@ -73,13 +77,15 @@ export async function GET(request: NextRequest) {
     const lastMonthAmount = lastMonthRevenue[0]?.total || 0;
 
     // Calculate percentage changes
-    const revenueChange = lastMonthAmount > 0
-      ? ((thisMonthAmount - lastMonthAmount) / lastMonthAmount) * 100
-      : 0;
+    const revenueChange =
+      lastMonthAmount > 0
+        ? ((thisMonthAmount - lastMonthAmount) / lastMonthAmount) * 100
+        : 0;
 
-    const invoiceChange = lastMonthInvoices > 0
-      ? ((thisMonthInvoices - lastMonthInvoices) / lastMonthInvoices) * 100
-      : 0;
+    const invoiceChange =
+      lastMonthInvoices > 0
+        ? ((thisMonthInvoices - lastMonthInvoices) / lastMonthInvoices) * 100
+        : 0;
 
     return NextResponse.json({
       totalRevenue: totalRevenueAmount,
@@ -93,7 +99,7 @@ export async function GET(request: NextRequest) {
   } catch (error: any) {
     return NextResponse.json(
       { error: "Failed to fetch statistics", message: error.message },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

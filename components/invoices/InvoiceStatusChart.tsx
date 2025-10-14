@@ -25,18 +25,25 @@ export const InvoiceStatusChart = () => {
 
   const chartData = data?.data || fallbackData;
 
-  const CustomLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percentage }: any) => {
+  const CustomLabel = ({
+    cx,
+    cy,
+    midAngle,
+    innerRadius,
+    outerRadius,
+    percentage,
+  }: any) => {
     const RADIAN = Math.PI / 180;
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
     const x = cx + radius * Math.cos(-midAngle * RADIAN);
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-      <text 
-        x={x} 
-        y={y} 
-        fill="white" 
-        textAnchor={x > cx ? 'start' : 'end'} 
+      <text
+        x={x}
+        y={y}
+        fill="white"
+        textAnchor={x > cx ? "start" : "end"}
         dominantBaseline="central"
         fontSize={12}
         fontWeight="bold"
@@ -76,10 +83,8 @@ export const InvoiceStatusChart = () => {
       }
     >
       <Card className="p-6">
-        <h3 className="text-lg font-semibold mb-4">
-          Stav faktúr
-        </h3>
-        
+        <h3 className="text-lg font-semibold mb-4">Stav faktúr</h3>
+
         {error && (
           <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-md">
             <p className="text-yellow-800 text-sm">
@@ -107,8 +112,8 @@ export const InvoiceStatusChart = () => {
             </Pie>
             <Tooltip
               formatter={(value: number, name: string) => [
-                `${value} faktúr`, 
-                name
+                `${value} faktúr`,
+                name,
               ]}
               content={({ active, payload }) => {
                 if (active && payload && payload.length) {
@@ -127,17 +132,17 @@ export const InvoiceStatusChart = () => {
             />
           </PieChart>
         </ResponsiveContainer>
-        
+
         {/* Legenda a štatistiky */}
         <div className="mt-6 grid grid-cols-1 sm:grid-cols-3 gap-4">
           {chartData.map((item) => (
-            <div 
-              key={item.name} 
+            <div
+              key={item.name}
               className="flex flex-col items-center p-3 rounded-lg border"
               style={{ borderColor: item.color }}
             >
               <div className="flex items-center gap-2 mb-2">
-                <div 
+                <div
                   className="w-3 h-3 rounded-full"
                   style={{ backgroundColor: item.color }}
                 />
@@ -152,7 +157,9 @@ export const InvoiceStatusChart = () => {
         {/* Celkový počet faktúr */}
         <div className="mt-4 pt-4 border-t border-gray-200">
           <div className="text-center">
-            <span className="text-sm text-gray-600">Celkový počet faktúr: </span>
+            <span className="text-sm text-gray-600">
+              Celkový počet faktúr:{" "}
+            </span>
             <span className="text-sm font-semibold">
               {chartData.reduce((sum, item) => sum + item.value, 0)}
             </span>

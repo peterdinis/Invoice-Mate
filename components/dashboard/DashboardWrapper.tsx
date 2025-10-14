@@ -134,23 +134,23 @@ const DashboardWrapper: FC = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
               <DashboardStatCard
                 title="Celkový príjem"
-                value={`€${stats?.totalRevenue.toLocaleString('sk-SK', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}`}
+                value={`€${stats?.totalRevenue.toLocaleString("sk-SK", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}`}
                 icon={DollarSign}
-                trend={`${stats?.revenueChange! > 0 ? '+' : ''}${stats?.revenueChange || 0}%`}
+                trend={`${stats?.revenueChange! > 0 ? "+" : ""}${stats?.revenueChange || 0}%`}
                 trendUp={stats?.revenueChange! > 0}
               />
               <DashboardStatCard
                 title="Čakajúce"
-                value={`€${stats?.thisMonthRevenue.toLocaleString('sk-SK', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}`}
+                value={`€${stats?.thisMonthRevenue.toLocaleString("sk-SK", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}`}
                 icon={Clock}
                 trend={`${stats?.thisMonthInvoices || 0} faktúr`}
                 variant="warning"
               />
               <DashboardStatCard
                 title="Zaplatené tento mesiac"
-                value={`€${stats?.thisMonthRevenue.toLocaleString('sk-SK', { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || '0'}`}
+                value={`€${stats?.thisMonthRevenue.toLocaleString("sk-SK", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"}`}
                 icon={TrendingUp}
-                trend={`${stats?.revenueChange! > 0 ? '+' : ''}${stats?.revenueChange || 0}%`}
+                trend={`${stats?.revenueChange! > 0 ? "+" : ""}${stats?.revenueChange || 0}%`}
                 trendUp={stats?.revenueChange! > 0}
                 variant="success"
               />
@@ -158,7 +158,7 @@ const DashboardWrapper: FC = () => {
                 title="Celkom faktúr"
                 value={`${stats?.totalInvoices || 0}`}
                 icon={FileText}
-                trend={`${stats?.invoiceChange! > 0 ? '+' : ''}${stats?.invoiceChange || 0} tento mesiac`}
+                trend={`${stats?.invoiceChange! > 0 ? "+" : ""}${stats?.invoiceChange || 0} tento mesiac`}
               />
             </div>
           </section>
