@@ -101,18 +101,17 @@ const ClientsWrapper: FC = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center"></div>
                         <div className="flex gap-1">
-                          <Button variant="ghost" size="icon">
+                          <Button variant="ghost" size="icon" 
+                            onClick={() => {
+                            copyToClipboard(client.email);
+                            toast({
+                              title: "Email bol skopírovaný",
+                              duration: 2000,
+                              className:
+                                "bg-green-800 text-white font-bold text-base",
+                            });
+                          }}>
                             <Mail
-                              onClick={() => {
-                                copyToClipboard(client.email);
-                                console.log("Test");
-                                toast({
-                                  title: "Email bol skopírovaný",
-                                  duration: 2000,
-                                  className:
-                                    "bg-green-800 text-white font-bold text-base",
-                                });
-                              }}
                               className="w-4 h-4"
                             />
                           </Button>
