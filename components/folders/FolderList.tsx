@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { Folder, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { useFolders } from "@/hooks/folder/useFolders";
+import { useFolders} from "@/hooks/folder/useFolders";
 import { Spinner } from "../ui/spinner";
 
 interface FolderListProps {
@@ -19,20 +19,16 @@ export const FolderList = ({
   const { data: folders, isLoading, isError } = useFolders();
 
   const allFolders = useMemo(() => {
-    if (!folders) return [{ _id: null, name: "Všetky faktúry", count: 0 }];
-    return [
-      { _id: null, name: "Všetky faktúry", count: folders.length },
-      ...folders,
-    ];
+    return folders || [];
   }, [folders]);
 
-  const renderFolderButton = (folder: (typeof allFolders)[0]) => {
+  const renderFolderButton = (folder: any) => {
     const isSelected = selectedFolder === folder._id;
     const Icon = isSelected ? FolderOpen : Folder;
 
     return (
       <Button
-        key={folder._id ?? "all"}
+        key={folder._id}
         variant={isSelected ? "secondary" : "ghost"}
         className={cn(
           "w-full justify-start gap-2",
