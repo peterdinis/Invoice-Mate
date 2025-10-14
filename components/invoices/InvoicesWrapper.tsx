@@ -43,7 +43,6 @@ import {
   EmptyTitle,
 } from "../ui/empty";
 
-// Definujte správny interface pre Invoice
 interface Invoice {
   _id: string;
   invoiceNumber: string;
@@ -51,7 +50,7 @@ interface Invoice {
     _id: string;
     name: string;
     email: string;
-  } | string; // Môže byť string (ID) alebo populated objekt
+  } | string;
   total: number;
   status: "paid" | "pending" | "overdue" | "draft";
   invoiceDate: string;
@@ -195,7 +194,7 @@ const InvoicesWrapper: FC = () => {
   const tableData = useMemo(() => {
     return filteredData.map((invoice: { invoiceNumber: any; _id: any; }) => ({
       ...invoice,
-      id: invoice.invoiceNumber || invoice._id, // Pre kompatibilitu s pôvodným kódom
+      id: invoice.invoiceNumber || invoice._id, 
     }));
   }, [filteredData]);
 
