@@ -7,6 +7,13 @@ export interface ILineItem {
   amount: number;
 }
 
+export enum InvoiceStatus {
+  PAID = "paid",
+  PENDING = "pending",
+  OVERDUE = "overdue",
+  DRAFT = "draft"
+}
+
 export interface IInvoice extends Document {
   client: Types.ObjectId;
   clientName: string;
@@ -19,6 +26,8 @@ export interface IInvoice extends Document {
   notes?: string;
   total: number;
   folder: Types.ObjectId;
+  status: InvoiceStatus;
+  paidAmount: number;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -51,6 +60,12 @@ const InvoiceSchema = new Schema<IInvoice>(
       ref: "Folder",
       required: true,
     },
+    status: {
+      type: String,
+      enum: Object.values(InvoiceStatus),
+      default: InvoiceStatus.PENDING,
+    },
+    paidAmount: { type: Number, default: 0 },
   },
   { timestamps: true },
 );
