@@ -14,13 +14,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
-import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import CustomLink from "../shared/CustomLink";
 import { useFolders } from "@/hooks/folder/useFolders";
-import { useClients } from "@/hooks/clients/useClients";
 import { Spinner } from "@/components/ui/spinner";
 import { useAllClients } from "@/hooks/clients/useAllClients";
+import {
+  CreateInvoiceData,
+  useCreateInvoice,
+} from "@/hooks/invoices/useCreateNewInvoice";
+import { toast } from "sonner";
 
 interface InvoiceItem {
   id: string;
@@ -42,8 +45,17 @@ const NewInvoice = () => {
     address: "",
   });
 
-  const { data: folders, isLoading: foldersLoading, error: foldersError } = useFolders();
-  const { data: clients, isLoading: clientsLoading, error: clientsError } = useAllClients();
+  const {
+    data: folders,
+    isLoading: foldersLoading,
+    error: foldersError,
+  } = useFolders();
+  const {
+    data: clients,
+    isLoading: clientsLoading,
+    error: clientsError,
+  } = useAllClients();
+  const { mutate: createInvoice, isPending: isCreating } = useCreateInvoice();
 
   const addItem = () => {
     setItems([
@@ -72,7 +84,7 @@ const NewInvoice = () => {
 
   const handleClientChange = (clientId: string) => {
     setSelectedClient(clientId);
-    const client = clients?.find(c => c._id === clientId);
+    const client = clients?.find((c) => c._id === clientId);
     if (client) {
       setClientDetails({
         name: client.name,
@@ -86,7 +98,7 @@ const NewInvoice = () => {
     return items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
   };
 
-  const handleSave = async () => {
+  const handleSave = () => {
     // Validácia
     if (!selectedFolder) {
       toast.error("Please select a folder");
@@ -103,47 +115,48 @@ const NewInvoice = () => {
       return;
     }
 
-    // Príprava dát pre API
-    const invoiceData = {
+    const invoiceNumber = (
+      document.getElementById("invoiceNumber") as HTMLInputElement
+    )?.value;
+    const invoiceDate = (
+      document.getElementById("invoiceDate") as HTMLInputElement
+    )?.value;
+    const dueDate = (document.getElementById("dueDate") as HTMLInputElement)
+      ?.value;
+    const notes = (document.getElementById("notes") as HTMLTextAreaElement)
+      ?.value;
+
+    if (!invoiceNumber || !invoiceDate || !dueDate) {
+      toast.error("Please fill in all required invoice details");
+      return;
+    }
+
+    const invoiceData: CreateInvoiceData = {
       client: selectedClient,
       clientName: clientDetails.name,
       clientEmail: clientDetails.email,
       clientAddress: clientDetails.address,
-      invoiceNumber: (document.getElementById("invoiceNumber") as HTMLInputElement)?.value,
-      invoiceDate: (document.getElementById("invoiceDate") as HTMLInputElement)?.value,
-      dueDate: (document.getElementById("dueDate") as HTMLInputElement)?.value,
-      lineItems: items.map(item => ({
+      invoiceNumber,
+      invoiceDate,
+      dueDate,
+      lineItems: items.map((item) => ({
         description: item.description,
         quantity: item.quantity,
         rate: item.rate,
         amount: item.quantity * item.rate,
       })),
-      notes: (document.getElementById("notes") as HTMLTextAreaElement)?.value,
+      notes: notes || "",
       total: calculateTotal(),
       folder: selectedFolder,
-      status: "draft" as const,
+      status: "draft",
       paidAmount: 0,
     };
 
-    try {
-      const response = await fetch("/api/invoices", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(invoiceData),
-      });
-
-      if (!response.ok) {
-        throw new Error("Failed to create invoice");
-      }
-
-      toast.success("Invoice created successfully!");
-      navigate.push("/invoices");
-    } catch (error) {
-      console.error("Error creating invoice:", error);
-      toast.error("Failed to create invoice");
-    }
+    createInvoice(invoiceData, {
+      onSuccess: () => {
+        navigate.push("/invoices");
+      },
+    });
   };
 
   return (
@@ -230,11 +243,16 @@ const NewInvoice = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="clientName">Client Name *</Label>
-              <Input 
-                id="clientName" 
-                placeholder="Enter client name" 
+              <Input
+                id="clientName"
+                placeholder="Enter client name"
                 value={clientDetails.name}
-                onChange={(e) => setClientDetails(prev => ({ ...prev, name: e.target.value }))}
+                onChange={(e) =>
+                  setClientDetails((prev) => ({
+                    ...prev,
+                    name: e.target.value,
+                  }))
+                }
                 required
               />
             </div>
@@ -245,18 +263,28 @@ const NewInvoice = () => {
                 type="email"
                 placeholder="client@example.com"
                 value={clientDetails.email}
-                onChange={(e) => setClientDetails(prev => ({ ...prev, email: e.target.value }))}
+                onChange={(e) =>
+                  setClientDetails((prev) => ({
+                    ...prev,
+                    email: e.target.value,
+                  }))
+                }
                 required
               />
             </div>
           </div>
           <div className="mt-4 space-y-2">
             <Label htmlFor="clientAddress">Address</Label>
-            <Textarea 
-              id="clientAddress" 
-              placeholder="Enter client address" 
+            <Textarea
+              id="clientAddress"
+              placeholder="Enter client address"
               value={clientDetails.address}
-              onChange={(e) => setClientDetails(prev => ({ ...prev, address: e.target.value }))}
+              onChange={(e) =>
+                setClientDetails((prev) => ({
+                  ...prev,
+                  address: e.target.value,
+                }))
+              }
             />
           </div>
         </Card>
@@ -386,12 +414,19 @@ const NewInvoice = () => {
 
         <div className="flex justify-end gap-4">
           <CustomLink href="/invoices">
-            <Button variant="outline" size="lg">
+            <Button variant="outline" size="lg" disabled={isCreating}>
               Cancel
             </Button>
           </CustomLink>
-          <Button onClick={handleSave} size="lg">
-            Create Invoice
+          <Button onClick={handleSave} size="lg" disabled={isCreating}>
+            {isCreating ? (
+              <>
+                <Spinner className="mr-2" />
+                Creating...
+              </>
+            ) : (
+              "Create Invoice"
+            )}
           </Button>
         </div>
       </div>
