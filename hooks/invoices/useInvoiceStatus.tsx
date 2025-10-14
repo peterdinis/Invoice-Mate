@@ -5,7 +5,7 @@ export interface InvoiceStatusData {
   value: number;
   percentage: number;
   color: string;
-   [key: string]: unknown;
+  [key: string]: unknown;
 }
 
 interface InvoiceStatusResponse {
