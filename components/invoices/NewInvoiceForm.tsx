@@ -20,6 +20,7 @@ import CustomLink from "../shared/CustomLink";
 import { useFolders } from "@/hooks/folder/useFolders";
 import { useClients } from "@/hooks/clients/useClients";
 import { Spinner } from "@/components/ui/spinner";
+import { useAllClients } from "@/hooks/clients/useAllClients";
 
 interface InvoiceItem {
   id: string;
@@ -42,7 +43,7 @@ const NewInvoice = () => {
   });
 
   const { data: folders, isLoading: foldersLoading, error: foldersError } = useFolders();
-  const { data: clients, isLoading: clientsLoading, error: clientsError } = useClients();
+  const { data: clients, isLoading: clientsLoading, error: clientsError } = useAllClients();
 
   const addItem = () => {
     setItems([
