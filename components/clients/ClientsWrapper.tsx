@@ -62,14 +62,14 @@ const ClientsWrapper: FC = () => {
   const handleSaveEdit = () => {
     // Tu pridajte logiku na uloženie zmien
     console.log("Ukladám zmeny:", editedClient);
-    
+
     toast({
       title: "Klient bol upravený",
       description: `Údaje klienta ${editedClient.name} boli úspešne aktualizované.`,
       duration: 3000,
       className: "bg-green-800 text-white font-bold text-base",
     });
-    
+
     setEditDialogOpen(false);
     setSelectedClient(null);
     setEditedClient(null);
@@ -78,14 +78,14 @@ const ClientsWrapper: FC = () => {
   const confirmDelete = () => {
     // Tu pridajte logiku na odstránenie klienta
     console.log("Odstraňujem klienta:", selectedClient);
-    
+
     toast({
       title: "Klient bol odstránený",
       description: `Klient ${selectedClient.name} bol úspešne odstránený.`,
       duration: 3000,
       className: "bg-green-800 text-white font-bold text-base",
     });
-    
+
     setDeleteDialogOpen(false);
     setSelectedClient(null);
   };
@@ -93,7 +93,7 @@ const ClientsWrapper: FC = () => {
   const handleInputChange = (field: string, value: string) => {
     setEditedClient((prev: any) => ({
       ...prev,
-      [field]: value
+      [field]: value,
     }));
   };
 
@@ -171,36 +171,37 @@ const ClientsWrapper: FC = () => {
                       <div className="flex items-start justify-between mb-4">
                         <div className="w-12 h-12 rounded-full bg-gradient-primary flex items-center justify-center"></div>
                         <div className="flex gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
+                          <Button
+                            variant="ghost"
+                            size="icon"
                             onClick={() => {
                               copyToClipboard(client.email);
                               toast({
                                 title: "Email bol skopírovaný",
                                 duration: 2000,
-                                className: "bg-green-800 text-white font-bold text-base",
+                                className:
+                                  "bg-green-800 text-white font-bold text-base",
                               });
                             }}
                           >
                             <Mail className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="icon"
                             onClick={() => handleViewClient(client)}
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="icon"
                             onClick={() => handleEditClient(client)}
                           >
                             <Edit className="w-4 h-4 text-blue-600" />
                           </Button>
-                          <Button 
-                            variant="ghost" 
+                          <Button
+                            variant="ghost"
                             size="icon"
                             onClick={() => handleDeleteClient(client)}
                           >
@@ -281,7 +282,7 @@ const ClientsWrapper: FC = () => {
               Informácie o vybranom klientovi
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedClient && (
             <div className="space-y-4">
               <div className="flex items-center gap-4">
@@ -289,8 +290,12 @@ const ClientsWrapper: FC = () => {
                   {selectedClient.name?.charAt(0) || "K"}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{selectedClient.name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
+                  <h3 className="font-semibold text-lg">
+                    {selectedClient.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedClient.email}
+                  </p>
                 </div>
               </div>
 
@@ -327,13 +332,10 @@ const ClientsWrapper: FC = () => {
           )}
 
           <DialogFooter>
-            <Button 
-              variant="outline" 
-              onClick={() => setViewDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
               Zavrieť
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 handleEditClient(selectedClient);
                 setViewDialogOpen(false);
@@ -354,7 +356,7 @@ const ClientsWrapper: FC = () => {
               Upravte informácie o klientovi
             </DialogDescription>
           </DialogHeader>
-          
+
           {editedClient && (
             <div className="space-y-4">
               <div className="flex items-center gap-4 mb-6">
@@ -363,7 +365,9 @@ const ClientsWrapper: FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Upraviť klienta</h3>
-                  <p className="text-sm text-muted-foreground">Aktualizujte údaje</p>
+                  <p className="text-sm text-muted-foreground">
+                    Aktualizujte údaje
+                  </p>
                 </div>
               </div>
 
@@ -404,7 +408,9 @@ const ClientsWrapper: FC = () => {
                   <Input
                     id="address"
                     value={editedClient.address || ""}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("address", e.target.value)
+                    }
                     placeholder="Zadajte adresu"
                   />
                 </div>
@@ -414,7 +420,9 @@ const ClientsWrapper: FC = () => {
                   <Input
                     id="company"
                     value={editedClient.company || ""}
-                    onChange={(e) => handleInputChange("company", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("company", e.target.value)
+                    }
                     placeholder="Zadajte názov spoločnosti"
                   />
                 </div>
@@ -423,17 +431,14 @@ const ClientsWrapper: FC = () => {
           )}
 
           <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setEditDialogOpen(false)}
               className="flex-1"
             >
               Zrušiť
             </Button>
-            <Button 
-              onClick={handleSaveEdit}
-              className="flex-1"
-            >
+            <Button onClick={handleSaveEdit} className="flex-1">
               Uložiť zmeny
             </Button>
           </DialogFooter>
@@ -444,12 +449,14 @@ const ClientsWrapper: FC = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-red-600">Odstrániť klienta</DialogTitle>
+            <DialogTitle className="text-red-600">
+              Odstrániť klienta
+            </DialogTitle>
             <DialogDescription>
               Naozaj chcete odstrániť tohto klienta? Táto akcia je nevratná.
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedClient && (
             <div className="p-4 border border-red-200 rounded-lg bg-red-50">
               <div className="flex items-center gap-3">
@@ -458,21 +465,23 @@ const ClientsWrapper: FC = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold">{selectedClient.name}</h4>
-                  <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedClient.email}
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
           <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               className="flex-1"
             >
               Zrušiť
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={confirmDelete}
               className="flex-1"

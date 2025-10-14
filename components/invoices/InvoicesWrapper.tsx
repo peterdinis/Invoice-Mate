@@ -58,11 +58,13 @@ import { Separator } from "@/components/ui/separator";
 interface Invoice {
   _id: string;
   invoiceNumber: string;
-  client: {
-    _id: string;
-    name: string;
-    email: string;
-  } | string;
+  client:
+    | {
+        _id: string;
+        name: string;
+        email: string;
+      }
+    | string;
   total: number;
   status: "paid" | "pending" | "overdue" | "draft";
   invoiceDate: string;
@@ -97,7 +99,9 @@ const statusConfig = {
 
 // Helper funkcia pre bezpečný prístup k status configu
 const getStatusConfig = (status: string) => {
-  return statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+  return (
+    statusConfig[status as keyof typeof statusConfig] || statusConfig.draft
+  );
 };
 
 const ITEMS_PER_PAGE = 5;
@@ -122,20 +126,19 @@ const InvoicesWrapper: FC = () => {
 
   const filteredData = useMemo(() => {
     if (!data?.invoices) return [];
-    return data.invoices.filter(
-      (invoice: Invoice) => {
-        const clientName = typeof invoice.client === 'object' 
-          ? invoice.client.name 
-          : 'Unknown Client';
-        
-        const invoiceNumber = invoice.invoiceNumber || invoice._id;
-        
-        return (
-          clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-      }
-    );
+    return data.invoices.filter((invoice: Invoice) => {
+      const clientName =
+        typeof invoice.client === "object"
+          ? invoice.client.name
+          : "Unknown Client";
+
+      const invoiceNumber = invoice.invoiceNumber || invoice._id;
+
+      return (
+        clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        invoiceNumber.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
   }, [data?.invoices, searchTerm]);
 
   // Funkcie pre dialógy
@@ -162,7 +165,7 @@ const InvoicesWrapper: FC = () => {
   const confirmDelete = () => {
     // Tu pridajte logiku na odstránenie faktúry
     console.log("Odstraňujem faktúru:", selectedInvoice);
-    
+
     // Simulácia úspešného odstránenia
     setTimeout(() => {
       setDeleteDialogOpen(false);
@@ -173,7 +176,7 @@ const InvoicesWrapper: FC = () => {
   const handleDownloadPDF = () => {
     // Tu pridajte logiku na generovanie a sťahovanie PDF
     console.log("Generujem PDF pre faktúru:", selectedInvoice);
-    
+
     // Simulácia sťahovania
     setTimeout(() => {
       setPdfDialogOpen(false);
@@ -195,9 +198,8 @@ const InvoicesWrapper: FC = () => {
       header: "Klient",
       cell: (info) => {
         const client = info.getValue();
-        const clientName = typeof client === 'object' 
-          ? client.name 
-          : 'Unknown Client';
+        const clientName =
+          typeof client === "object" ? client.name : "Unknown Client";
         return <span>{clientName}</span>;
       },
     },
@@ -233,7 +235,7 @@ const InvoicesWrapper: FC = () => {
       enableSorting: true,
       cell: (info) => (
         <span className="text-muted-foreground">
-          {new Date(info.getValue() as string).toLocaleDateString('sk-SK')}
+          {new Date(info.getValue() as string).toLocaleDateString("sk-SK")}
         </span>
       ),
       sortingFn: (a, b) =>
@@ -245,32 +247,32 @@ const InvoicesWrapper: FC = () => {
       header: "Akcie",
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => handleViewInvoice(row.original)}
             title="Zobraziť detail"
           >
             <Eye className="w-4 h-4" />
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => handleEditInvoice(row.original)}
             title="Upraviť faktúru"
           >
             <Edit className="w-4 h-4" />
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => handleGeneratePDF(row.original)}
             title="Generovať PDF"
           >
             <FileText className="w-4 h-4 text-blue-600" />
           </Button>
-          <Button 
-            variant="ghost" 
+          <Button
+            variant="ghost"
             size="icon"
             onClick={() => handleDeleteInvoice(row.original)}
             title="Odstrániť faktúru"
@@ -283,9 +285,9 @@ const InvoicesWrapper: FC = () => {
   ];
 
   const tableData = useMemo(() => {
-    return filteredData.map((invoice: { invoiceNumber: any; _id: any; }) => ({
+    return filteredData.map((invoice: { invoiceNumber: any; _id: any }) => ({
       ...invoice,
-      id: invoice.invoiceNumber || invoice._id, 
+      id: invoice.invoiceNumber || invoice._id,
     }));
   }, [filteredData]);
 
@@ -370,7 +372,9 @@ const InvoicesWrapper: FC = () => {
                       </EmptyMedia>
                       <EmptyTitle>Žiadne faktúry</EmptyTitle>
                       <EmptyDescription>
-                        {searchTerm ? 'Nenašli sa žiadne faktúry pre váš vyhľadávací výraz' : 'Zatiaľ nemáte žiadne faktúry'}
+                        {searchTerm
+                          ? "Nenašli sa žiadne faktúry pre váš vyhľadávací výraz"
+                          : "Zatiaľ nemáte žiadne faktúry"}
                       </EmptyDescription>
                     </EmptyHeader>
                   </Empty>
@@ -498,17 +502,24 @@ const InvoicesWrapper: FC = () => {
               Kompletné informácie o faktúre
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedInvoice && (
             <div className="space-y-6">
               <div className="flex justify-between items-start">
                 <div>
-                  <h3 className="text-lg font-semibold">Faktúra #{selectedInvoice.invoiceNumber}</h3>
+                  <h3 className="text-lg font-semibold">
+                    Faktúra #{selectedInvoice.invoiceNumber}
+                  </h3>
                   <p className="text-sm text-muted-foreground">
-                    Vytvorená: {new Date(selectedInvoice.createdAt).toLocaleDateString('sk-SK')}
+                    Vytvorená:{" "}
+                    {new Date(selectedInvoice.createdAt).toLocaleDateString(
+                      "sk-SK",
+                    )}
                   </p>
                 </div>
-                <Badge className={getStatusConfig(selectedInvoice.status).className}>
+                <Badge
+                  className={getStatusConfig(selectedInvoice.status).className}
+                >
                   {getStatusConfig(selectedInvoice.status).label}
                 </Badge>
               </div>
@@ -520,19 +531,33 @@ const InvoicesWrapper: FC = () => {
                   <h4 className="font-medium mb-2">Klient</h4>
                   <div className="space-y-1 text-sm">
                     <p className="font-semibold">
-                      {typeof selectedInvoice.client === 'object' ? selectedInvoice.client.name : 'Unknown Client'}
+                      {typeof selectedInvoice.client === "object"
+                        ? selectedInvoice.client.name
+                        : "Unknown Client"}
                     </p>
-                    {typeof selectedInvoice.client === 'object' && (
-                      <p className="text-muted-foreground">{selectedInvoice.client.email}</p>
+                    {typeof selectedInvoice.client === "object" && (
+                      <p className="text-muted-foreground">
+                        {selectedInvoice.client.email}
+                      </p>
                     )}
                   </div>
                 </div>
-                
+
                 <div>
                   <h4 className="font-medium mb-2">Dátumy</h4>
                   <div className="space-y-1 text-sm">
-                    <p>Vystavená: {new Date(selectedInvoice.invoiceDate).toLocaleDateString('sk-SK')}</p>
-                    <p>Splatnosť: {new Date(selectedInvoice.dueDate).toLocaleDateString('sk-SK')}</p>
+                    <p>
+                      Vystavená:{" "}
+                      {new Date(selectedInvoice.invoiceDate).toLocaleDateString(
+                        "sk-SK",
+                      )}
+                    </p>
+                    <p>
+                      Splatnosť:{" "}
+                      {new Date(selectedInvoice.dueDate).toLocaleDateString(
+                        "sk-SK",
+                      )}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -544,9 +569,14 @@ const InvoicesWrapper: FC = () => {
                     <h4 className="font-medium mb-3">Položky</h4>
                     <div className="space-y-2">
                       {selectedInvoice.items.map((item, index) => (
-                        <div key={index} className="flex justify-between text-sm">
+                        <div
+                          key={index}
+                          className="flex justify-between text-sm"
+                        >
                           <span>{item.description}</span>
-                          <span>${(item.quantity * item.price).toFixed(2)}</span>
+                          <span>
+                            ${(item.quantity * item.price).toFixed(2)}
+                          </span>
                         </div>
                       ))}
                     </div>
@@ -564,13 +594,10 @@ const InvoicesWrapper: FC = () => {
           )}
 
           <DialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setViewDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
               Zavrieť
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 handleGeneratePDF(selectedInvoice!);
                 setViewDialogOpen(false);
@@ -589,11 +616,9 @@ const InvoicesWrapper: FC = () => {
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Upraviť faktúru</DialogTitle>
-            <DialogDescription>
-              Upravte informácie o faktúre
-            </DialogDescription>
+            <DialogDescription>Upravte informácie o faktúre</DialogDescription>
           </DialogHeader>
-          
+
           {selectedInvoice && (
             <div className="space-y-4">
               <div className="p-4 border rounded-lg bg-muted/20">
@@ -605,13 +630,10 @@ const InvoicesWrapper: FC = () => {
           )}
 
           <DialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setEditDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
               Zrušiť
             </Button>
-            <Button 
+            <Button
               onClick={() => {
                 // Logika pre uloženie zmien
                 setEditDialogOpen(false);
@@ -632,16 +654,20 @@ const InvoicesWrapper: FC = () => {
               Vyberte možnosti pre generovanie PDF faktúry
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedInvoice && (
             <div className="space-y-4">
               <div className="p-4 border rounded-lg bg-blue-50">
                 <div className="flex items-center gap-3">
                   <FileText className="w-8 h-8 text-blue-600" />
                   <div>
-                    <h4 className="font-semibold">Faktúra #{selectedInvoice.invoiceNumber}</h4>
+                    <h4 className="font-semibold">
+                      Faktúra #{selectedInvoice.invoiceNumber}
+                    </h4>
                     <p className="text-sm text-muted-foreground">
-                      {typeof selectedInvoice.client === 'object' ? selectedInvoice.client.name : 'Unknown Client'}
+                      {typeof selectedInvoice.client === "object"
+                        ? selectedInvoice.client.name
+                        : "Unknown Client"}
                     </p>
                   </div>
                 </div>
@@ -649,32 +675,47 @@ const InvoicesWrapper: FC = () => {
 
               <div className="space-y-3">
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" id="includeLogo" defaultChecked className="rounded" />
-                  <label htmlFor="includeLogo" className="text-sm">Zahrnúť logo</label>
+                  <input
+                    type="checkbox"
+                    id="includeLogo"
+                    defaultChecked
+                    className="rounded"
+                  />
+                  <label htmlFor="includeLogo" className="text-sm">
+                    Zahrnúť logo
+                  </label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" id="includeSignature" defaultChecked className="rounded" />
-                  <label htmlFor="includeSignature" className="text-sm">Zahrnúť podpis</label>
+                  <input
+                    type="checkbox"
+                    id="includeSignature"
+                    defaultChecked
+                    className="rounded"
+                  />
+                  <label htmlFor="includeSignature" className="text-sm">
+                    Zahrnúť podpis
+                  </label>
                 </div>
                 <div className="flex items-center gap-2">
-                  <input type="checkbox" id="includeTerms" defaultChecked className="rounded" />
-                  <label htmlFor="includeTerms" className="text-sm">Zahrnúť obchodné podmienky</label>
+                  <input
+                    type="checkbox"
+                    id="includeTerms"
+                    defaultChecked
+                    className="rounded"
+                  />
+                  <label htmlFor="includeTerms" className="text-sm">
+                    Zahrnúť obchodné podmienky
+                  </label>
                 </div>
               </div>
             </div>
           )}
 
           <DialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
-              onClick={() => setPdfDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>
               Zrušiť
             </Button>
-            <Button 
-              onClick={handleDownloadPDF}
-              className="gap-2"
-            >
+            <Button onClick={handleDownloadPDF} className="gap-2">
               <Download className="w-4 h-4" />
               Generovať a stiahnuť
             </Button>
@@ -686,12 +727,14 @@ const InvoicesWrapper: FC = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-red-600">Odstrániť faktúru</DialogTitle>
+            <DialogTitle className="text-red-600">
+              Odstrániť faktúru
+            </DialogTitle>
             <DialogDescription>
               Naozaj chcete odstrániť túto faktúru? Táto akcia je nevratná.
             </DialogDescription>
           </DialogHeader>
-          
+
           {selectedInvoice && (
             <div className="p-4 border border-red-200 rounded-lg bg-red-50">
               <div className="flex items-center gap-3">
@@ -699,9 +742,14 @@ const InvoicesWrapper: FC = () => {
                   #
                 </div>
                 <div>
-                  <h4 className="font-semibold">Faktúra #{selectedInvoice.invoiceNumber}</h4>
+                  <h4 className="font-semibold">
+                    Faktúra #{selectedInvoice.invoiceNumber}
+                  </h4>
                   <p className="text-sm text-muted-foreground">
-                    {typeof selectedInvoice.client === 'object' ? selectedInvoice.client.name : 'Unknown Client'} • ${selectedInvoice.total.toFixed(2)}
+                    {typeof selectedInvoice.client === "object"
+                      ? selectedInvoice.client.name
+                      : "Unknown Client"}{" "}
+                    • ${selectedInvoice.total.toFixed(2)}
                   </p>
                 </div>
               </div>
@@ -709,14 +757,14 @@ const InvoicesWrapper: FC = () => {
           )}
 
           <DialogFooter className="flex gap-2">
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               onClick={() => setDeleteDialogOpen(false)}
               className="flex-1"
             >
               Zrušiť
             </Button>
-            <Button 
+            <Button
               variant="destructive"
               onClick={confirmDelete}
               className="flex-1"
