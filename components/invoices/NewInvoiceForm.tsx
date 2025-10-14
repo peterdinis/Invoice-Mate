@@ -6,11 +6,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import CustomLink from "../shared/CustomLink";
+import { useFolders } from "@/hooks/folder/useFolders";
+import { useClients } from "@/hooks/clients/useClients";
+import { Spinner } from "@/components/ui/spinner";
 
 interface InvoiceItem {
   id: string;
@@ -24,6 +33,16 @@ const NewInvoice = () => {
   const [items, setItems] = useState<InvoiceItem[]>([
     { id: "1", description: "", quantity: 1, rate: 0 },
   ]);
+  const [selectedFolder, setSelectedFolder] = useState<string>("");
+  const [selectedClient, setSelectedClient] = useState<string>("");
+  const [clientDetails, setClientDetails] = useState({
+    name: "",
+    email: "",
+    address: "",
+  });
+
+  const { data: folders, isLoading: foldersLoading, error: foldersError } = useFolders();
+  const { data: clients, isLoading: clientsLoading, error: clientsError } = useClients();
 
   const addItem = () => {
     setItems([
@@ -50,13 +69,80 @@ const NewInvoice = () => {
     );
   };
 
+  const handleClientChange = (clientId: string) => {
+    setSelectedClient(clientId);
+    const client = clients?.find(c => c._id === clientId);
+    if (client) {
+      setClientDetails({
+        name: client.name,
+        email: client.email,
+        address: client.address || "",
+      });
+    }
+  };
+
   const calculateTotal = () => {
     return items.reduce((sum, item) => sum + item.quantity * item.rate, 0);
   };
 
-  const handleSave = () => {
-    toast.success("Invoice created successfully!");
-    navigate.push("/invoices");
+  const handleSave = async () => {
+    // Validácia
+    if (!selectedFolder) {
+      toast.error("Please select a folder");
+      return;
+    }
+
+    if (!selectedClient) {
+      toast.error("Please select a client");
+      return;
+    }
+
+    if (!clientDetails.name || !clientDetails.email) {
+      toast.error("Please fill in client details");
+      return;
+    }
+
+    // Príprava dát pre API
+    const invoiceData = {
+      client: selectedClient,
+      clientName: clientDetails.name,
+      clientEmail: clientDetails.email,
+      clientAddress: clientDetails.address,
+      invoiceNumber: (document.getElementById("invoiceNumber") as HTMLInputElement)?.value,
+      invoiceDate: (document.getElementById("invoiceDate") as HTMLInputElement)?.value,
+      dueDate: (document.getElementById("dueDate") as HTMLInputElement)?.value,
+      lineItems: items.map(item => ({
+        description: item.description,
+        quantity: item.quantity,
+        rate: item.rate,
+        amount: item.quantity * item.rate,
+      })),
+      notes: (document.getElementById("notes") as HTMLTextAreaElement)?.value,
+      total: calculateTotal(),
+      folder: selectedFolder,
+      status: "draft" as const,
+      paidAmount: 0,
+    };
+
+    try {
+      const response = await fetch("/api/invoices", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(invoiceData),
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to create invoice");
+      }
+
+      toast.success("Invoice created successfully!");
+      navigate.push("/invoices");
+    } catch (error) {
+      console.error("Error creating invoice:", error);
+      toast.error("Failed to create invoice");
+    }
   };
 
   return (
@@ -75,25 +161,102 @@ const NewInvoice = () => {
 
         <Card className="p-6 bg-gradient-card mb-6">
           <h2 className="text-xl font-semibold mb-4 text-foreground">
-            Client Information
+            Folder Selection
           </h2>
+          <div className="space-y-2">
+            <Label htmlFor="folder">Select Folder *</Label>
+            <Select value={selectedFolder} onValueChange={setSelectedFolder}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a folder" />
+              </SelectTrigger>
+              <SelectContent>
+                {foldersLoading ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Spinner />
+                  </div>
+                ) : foldersError ? (
+                  <div className="text-red-500 p-2 text-sm">
+                    Error loading folders
+                  </div>
+                ) : (
+                  folders?.map((folder) => (
+                    <SelectItem key={folder._id} value={folder._id}>
+                      {folder.name}
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {!selectedFolder && (
+              <p className="text-sm text-red-500">Please select a folder</p>
+            )}
+          </div>
+        </Card>
+
+        <Card className="p-6 bg-gradient-card mb-6">
+          <h2 className="text-xl font-semibold mb-4 text-foreground">
+            Client Selection
+          </h2>
+          <div className="space-y-2 mb-4">
+            <Label htmlFor="client">Select Client *</Label>
+            <Select value={selectedClient} onValueChange={handleClientChange}>
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Choose a client" />
+              </SelectTrigger>
+              <SelectContent>
+                {clientsLoading ? (
+                  <div className="flex items-center justify-center p-4">
+                    <Spinner />
+                  </div>
+                ) : clientsError ? (
+                  <div className="text-red-500 p-2 text-sm">
+                    Error loading clients
+                  </div>
+                ) : (
+                  clients?.map((client) => (
+                    <SelectItem key={client._id} value={client._id}>
+                      {client.name} ({client.email})
+                    </SelectItem>
+                  ))
+                )}
+              </SelectContent>
+            </Select>
+            {!selectedClient && (
+              <p className="text-sm text-red-500">Please select a client</p>
+            )}
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="clientName">Client Name</Label>
-              <Input id="clientName" placeholder="Enter client name" />
+              <Label htmlFor="clientName">Client Name *</Label>
+              <Input 
+                id="clientName" 
+                placeholder="Enter client name" 
+                value={clientDetails.name}
+                onChange={(e) => setClientDetails(prev => ({ ...prev, name: e.target.value }))}
+                required
+              />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="clientEmail">Email</Label>
+              <Label htmlFor="clientEmail">Email *</Label>
               <Input
                 id="clientEmail"
                 type="email"
                 placeholder="client@example.com"
+                value={clientDetails.email}
+                onChange={(e) => setClientDetails(prev => ({ ...prev, email: e.target.value }))}
+                required
               />
             </div>
           </div>
           <div className="mt-4 space-y-2">
             <Label htmlFor="clientAddress">Address</Label>
-            <Textarea id="clientAddress" placeholder="Enter client address" />
+            <Textarea 
+              id="clientAddress" 
+              placeholder="Enter client address" 
+              value={clientDetails.address}
+              onChange={(e) => setClientDetails(prev => ({ ...prev, address: e.target.value }))}
+            />
           </div>
         </Card>
 
@@ -103,16 +266,16 @@ const NewInvoice = () => {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="invoiceNumber">Invoice Number</Label>
-              <Input id="invoiceNumber" placeholder="INV-001" />
+              <Label htmlFor="invoiceNumber">Invoice Number *</Label>
+              <Input id="invoiceNumber" placeholder="INV-001" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="invoiceDate">Invoice Date</Label>
-              <Input id="invoiceDate" type="date" />
+              <Label htmlFor="invoiceDate">Invoice Date *</Label>
+              <Input id="invoiceDate" type="date" required />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input id="dueDate" type="date" />
+              <Label htmlFor="dueDate">Due Date *</Label>
+              <Input id="dueDate" type="date" required />
             </div>
           </div>
         </Card>
@@ -137,17 +300,18 @@ const NewInvoice = () => {
             {items.map((item, index) => (
               <div key={item.id} className="grid grid-cols-12 gap-4 items-end">
                 <div className="col-span-12 md:col-span-5 space-y-2">
-                  <Label>Description</Label>
+                  <Label>Description *</Label>
                   <Input
                     placeholder="Item description"
                     value={item.description}
                     onChange={(e) =>
                       updateItem(item.id, "description", e.target.value)
                     }
+                    required
                   />
                 </div>
                 <div className="col-span-6 md:col-span-2 space-y-2">
-                  <Label>Quantity</Label>
+                  <Label>Quantity *</Label>
                   <Input
                     type="number"
                     min="1"
@@ -159,10 +323,11 @@ const NewInvoice = () => {
                         parseInt(e.target.value) || 0,
                       )
                     }
+                    required
                   />
                 </div>
                 <div className="col-span-6 md:col-span-3 space-y-2">
-                  <Label>Rate ($)</Label>
+                  <Label>Rate ($) *</Label>
                   <Input
                     type="number"
                     min="0"
@@ -175,6 +340,7 @@ const NewInvoice = () => {
                         parseFloat(e.target.value) || 0,
                       )
                     }
+                    required
                   />
                 </div>
                 <div className="col-span-10 md:col-span-1 flex items-center justify-center">
@@ -211,6 +377,7 @@ const NewInvoice = () => {
             Additional Notes
           </h2>
           <Textarea
+            id="notes"
             placeholder="Add any additional notes or terms..."
             rows={4}
           />
