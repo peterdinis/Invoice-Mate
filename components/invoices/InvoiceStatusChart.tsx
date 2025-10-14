@@ -116,7 +116,7 @@ export const InvoiceStatusChart = () => {
                   return (
                     <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-sm">
                       <p className="font-medium">{data.name}</p>
-                      <p className="text-sm text-gray-600">
+                      <p className="text-sm text-gray-600 dark:text-sky-100">
                         {data.value} faktúr ({data.percentage}%)
                       </p>
                     </div>
