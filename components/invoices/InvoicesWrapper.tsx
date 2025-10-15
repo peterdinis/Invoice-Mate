@@ -20,7 +20,6 @@ import {
   FileText,
   Download,
 } from "lucide-react";
-
 import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { Button } from "../ui/button";
 import { Card } from "../ui/card";
@@ -54,6 +53,13 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Invoice {
   _id: string;
@@ -108,12 +114,12 @@ const InvoicesWrapper: FC = () => {
   const [selectedFolder, setSelectedFolder] = useState<string | null>(null);
   const [pageIndex, setPageIndex] = useState(1);
   const [sorting, setSorting] = useState<SortingState>([]);
-
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [pdfDialogOpen, setPdfDialogOpen] = useState(false);
   const [selectedInvoice, setSelectedInvoice] = useState<Invoice | null>(null);
+  const [editedStatus, setEditedStatus] = useState<Invoice["status"]>("draft");
 
   const { data, isLoading, isError, error, refetch } = usePaginatedInvoices(
     pageIndex,
@@ -123,7 +129,7 @@ const InvoicesWrapper: FC = () => {
   );
 
   useEffect(() => {
-    setPageIndex(1); // reset stránkovania pri zmene priečinka alebo search
+    setPageIndex(1);
     refetch();
   }, [selectedFolder, searchTerm, refetch]);
 
@@ -134,6 +140,7 @@ const InvoicesWrapper: FC = () => {
 
   const handleEditInvoice = (invoice: Invoice) => {
     setSelectedInvoice(invoice);
+    setEditedStatus(invoice.status);
     setEditDialogOpen(true);
   };
 
@@ -162,6 +169,22 @@ const InvoicesWrapper: FC = () => {
       setPdfDialogOpen(false);
       setSelectedInvoice(null);
     }, 1500);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!selectedInvoice) return;
+    try {
+      const res = await fetch(`/api/invoices/${selectedInvoice._id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: editedStatus }),
+      });
+      if (!res.ok) throw new Error("Nepodarilo sa upraviť faktúru");
+      setEditDialogOpen(false);
+      refetch();
+    } catch (err) {
+      console.error(err);
+    }
   };
 
   const columns: ColumnDef<Invoice, any>[] = [
@@ -397,100 +420,6 @@ const InvoicesWrapper: FC = () => {
         </div>
       </div>
 
-      {/* Dialog pre zobrazenie faktúry */}
-      <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
-        <DialogContent className="sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Detail faktúry</DialogTitle>
-            <DialogDescription>Kompletné informácie o faktúre</DialogDescription>
-          </DialogHeader>
-
-          {selectedInvoice && (
-            <div className="space-y-6">
-              <div className="flex justify-between items-start">
-                <div>
-                  <h3 className="text-lg font-semibold">Faktúra #{selectedInvoice.invoiceNumber}</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Vytvorená: {new Date(selectedInvoice.createdAt).toLocaleDateString("sk-SK")}
-                  </p>
-                </div>
-                <Badge className={getStatusConfig(selectedInvoice.status).className}>
-                  {getStatusConfig(selectedInvoice.status).label}
-                </Badge>
-              </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-2 gap-6">
-                <div>
-                  <h4 className="font-medium mb-2">Klient</h4>
-                  <div className="space-y-1 text-sm">
-                    <p className="font-semibold">
-                      {typeof selectedInvoice.client === "object"
-                        ? selectedInvoice.client.name
-                        : "Unknown Client"}
-                    </p>
-                    {typeof selectedInvoice.client === "object" && (
-                      <p className="text-muted-foreground">{selectedInvoice.client.email}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div>
-                  <h4 className="font-medium mb-2">Dátumy</h4>
-                  <div className="space-y-1 text-sm">
-                    <p>
-                      Vystavená: {new Date(selectedInvoice.invoiceDate).toLocaleDateString("sk-SK")}
-                    </p>
-                    <p>
-                      Splatnosť: {new Date(selectedInvoice.dueDate).toLocaleDateString("sk-SK")}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {selectedInvoice.items && selectedInvoice.items.length > 0 && (
-                <>
-                  <Separator />
-                  <div>
-                    <h4 className="font-medium mb-3">Položky</h4>
-                    <div className="space-y-2">
-                      {selectedInvoice.items.map((item, index) => (
-                        <div key={index} className="flex justify-between text-sm">
-                          <span>{item.description}</span>
-                          <span>${(item.quantity * item.price).toFixed(2)}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </>
-              )}
-
-              <Separator />
-
-              <div className="flex justify-between items-center text-lg font-semibold">
-                <span>Celková suma:</span>
-                <span>${selectedInvoice.total.toFixed(2)}</span>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setViewDialogOpen(false)}>Zavrieť</Button>
-            <Button
-              onClick={() => {
-                handleGeneratePDF(selectedInvoice!);
-                setViewDialogOpen(false);
-              }}
-              className="gap-2"
-            >
-              <Download className="w-4 h-4" /> Stiahnuť PDF
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog pre úpravu faktúry */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
@@ -500,94 +429,31 @@ const InvoicesWrapper: FC = () => {
 
           {selectedInvoice && (
             <div className="space-y-4">
-              <div className="p-4 border rounded-lg bg-muted/20">
-                <p className="text-sm text-muted-foreground">
-                  Funkcionalita úpravy bude doplnená v ďalšej verzii.
-                </p>
+              <div className="grid gap-4">
+                <div>
+                  <label className="text-sm font-medium">Stav faktúry</label>
+                  <Select
+                    value={editedStatus}
+                    onValueChange={(val: Invoice["status"]) => setEditedStatus(val)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Vyberte stav" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="paid">Zaplatené</SelectItem>
+                      <SelectItem value="pending">Čakajúce</SelectItem>
+                      <SelectItem value="overdue">Po splatnosti</SelectItem>
+                      <SelectItem value="draft">Koncept</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             </div>
           )}
 
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Zrušiť</Button>
-            <Button onClick={() => setEditDialogOpen(false)}>Uložiť zmeny</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog pre generovanie PDF */}
-      <Dialog open={pdfDialogOpen} onOpenChange={setPdfDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Generovať PDF</DialogTitle>
-            <DialogDescription>Vyberte možnosti pre generovanie PDF faktúry</DialogDescription>
-          </DialogHeader>
-
-          {selectedInvoice && (
-            <div className="space-y-4">
-              <div className="p-4 border rounded-lg bg-blue-50">
-                <div className="flex items-center gap-3">
-                  <FileText className="w-8 h-8 text-blue-600" />
-                  <div>
-                    <h4 className="font-semibold">Faktúra #{selectedInvoice.invoiceNumber}</h4>
-                    <p className="text-sm text-muted-foreground">
-                      {typeof selectedInvoice.client === "object" ? selectedInvoice.client.name : "Unknown Client"}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-3">
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="includeLogo" defaultChecked className="rounded" />
-                  <label htmlFor="includeLogo" className="text-sm">Zahrnúť logo</label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="includeSignature" defaultChecked className="rounded" />
-                  <label htmlFor="includeSignature" className="text-sm">Zahrnúť podpis</label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input type="checkbox" id="includeTerms" defaultChecked className="rounded" />
-                  <label htmlFor="includeTerms" className="text-sm">Zahrnúť obchodné podmienky</label>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>Zrušiť</Button>
-            <Button onClick={handleDownloadPDF} className="gap-2">
-              <Download className="w-4 h-4" /> Generovať a stiahnuť
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog pre odstránenie faktúry */}
-      <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle className="text-red-600">Odstrániť faktúru</DialogTitle>
-            <DialogDescription>Naozaj chcete odstrániť túto faktúru? Táto akcia je nevratná.</DialogDescription>
-          </DialogHeader>
-
-          {selectedInvoice && (
-            <div className="p-4 border border-red-200 rounded-lg bg-red-50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center text-red-600 font-semibold">#</div>
-                <div>
-                  <h4 className="font-semibold">Faktúra #{selectedInvoice.invoiceNumber}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {typeof selectedInvoice.client === "object" ? selectedInvoice.client.name : "Unknown Client"} • ${selectedInvoice.total.toFixed(2)}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="flex-1">Zrušiť</Button>
-            <Button variant="destructive" onClick={confirmDelete} className="flex-1">Odstrániť</Button>
+            <Button onClick={handleSaveEdit}>Uložiť zmeny</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
