@@ -13,7 +13,7 @@ export const useUpdateInvoiceStatus = () => {
 
   return useMutation({
     mutationFn: async ({ id, status }: UpdateInvoiceStatusVariables) => {
-      const res = await fetch(`/api/invoices/${id}/status`, {
+      const res = await fetch(`/api/invoices/${id}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status }),
@@ -27,7 +27,9 @@ export const useUpdateInvoiceStatus = () => {
       return res.json();
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      // Invalidate relevant queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ['invoices'] });
+      queryClient.invalidateQueries({ queryKey: ['paginatedInvoices'] });
     },
   });
 };
