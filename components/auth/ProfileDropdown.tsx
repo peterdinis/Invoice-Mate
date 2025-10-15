@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Spinner } from "../ui/spinner";
 
 interface Session {
   user: {
@@ -82,17 +83,13 @@ const ProfileDropdown: FC = () => {
             <p className="text-sm font-medium">{email}</p>
           </div>
         </div>
-        <DropdownMenuItem>
-          <User size={16} className="mr-2" />
-          Profile
-        </DropdownMenuItem>
         <DropdownMenuItem
           onClick={() => logoutMutation.mutate()}
           className="text-red-600"
           disabled={logoutMutation.isPending}
         >
           <LogOut size={16} className="mr-2" />
-          {logoutMutation.isPending ? "Logging out..." : "Logout"}
+          {logoutMutation.isPending ? <Spinner /> : "Logout"}
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
