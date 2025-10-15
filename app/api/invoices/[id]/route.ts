@@ -2,10 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import Invoice from '@/models/Invoice';
 import connectToDB from '@/lib/auth/mongoose';
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   try {
     await connectToDB();
     

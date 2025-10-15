@@ -1,5 +1,6 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
 import "./Client";
+import "./Folder";
 
 export interface ILineItem {
   description: string;
