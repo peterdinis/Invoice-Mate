@@ -2,16 +2,27 @@ import { NextRequest, NextResponse } from "next/server";
 import Client from "@/models/Client";
 import connectToDB from "@/lib/auth/mongoose";
 
+interface ClientWithInvoices {
+  _id: string;
+  name: string;
+  email: string;
+  address?: string;
+  createdAt: Date;
+  updatedAt: Date;
+  invoices: any[];
+  invoiceCount: number;
+}
+
 export async function GET(req: NextRequest) {
   await connectToDB();
 
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
-  const searchTerm = searchParams.get("searchTerm") || "";
+  const searchTerm = searchParams.get("search") || ""; // ⚠️ Opravený parameter
   const skip = (page - 1) * limit;
 
-  // Filter for searchTerm on name/email
+  // Filter pre vyhľadávanie podľa mena alebo emailu
   const filter = searchTerm
     ? {
         $or: [
@@ -21,9 +32,9 @@ export async function GET(req: NextRequest) {
       }
     : {};
 
-  // Use aggregation to include invoice count
-  const clientsWithInvoiceCount = await Client.aggregate([
-    { $match: filter }, // apply search filter
+  // Aggregácia pre pripojenie faktúr
+  const clientsWithInvoiceCount: ClientWithInvoices[] = await Client.aggregate([
+    { $match: filter },
     {
       $lookup: {
         from: "invoices", // MongoDB collection name
@@ -34,14 +45,13 @@ export async function GET(req: NextRequest) {
     },
     {
       $addFields: {
-        invoiceCount: { $size: "$invoices" }, // count invoices
+        invoiceCount: { $size: "$invoices" }, // počet faktúr
       },
     },
     { $skip: skip },
     { $limit: limit },
   ]);
 
-  // Get total count for pagination
   const total = await Client.countDocuments(filter);
 
   return NextResponse.json({
