@@ -1,39 +1,49 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 import Folder from "@/models/Folder";
 
-export async function GET(req: Request) {
-  try {
-    await connectToDB();
+export async function GET(req: NextRequest) {
+  await connectToDB();
 
-    const { searchParams } = new URL(req.url);
-    const page = parseInt(searchParams.get("page") || "1");
-    const limit = parseInt(searchParams.get("limit") || "10");
+  const { searchParams } = new URL(req.url);
+  const page = parseInt(searchParams.get("page") || "1", 10);
+  const limit = parseInt(searchParams.get("limit") || "10", 10);
+  const folderId = searchParams.get("folderId") || null;
+  const searchTerm = searchParams.get("search") || "";
+  const skip = (page - 1) * limit;
 
-    const skip = (page - 1) * limit;
+  const filter: any = {};
 
-    const [invoices, total] = await Promise.all([
-      Invoice.find()
-        .populate("client folder")
-        .sort({ createdAt: -1 })
-        .skip(skip)
-        .limit(limit),
-      Invoice.countDocuments(),
-    ]);
-
-    return NextResponse.json({
-      invoices,
-      pagination: {
-        total,
-        page,
-        pages: Math.ceil(total / limit),
-      },
-    });
-  } catch (error: any) {
-    console.error("Pagination error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  if (folderId) {
+    filter.folder = folderId; // filter podľa priečinka
   }
+
+  if (searchTerm) {
+    filter.$or = [
+      { invoiceNumber: { $regex: searchTerm, $options: "i" } },
+      { "client.name": { $regex: searchTerm, $options: "i" } },
+      { "client.email": { $regex: searchTerm, $options: "i" } },
+    ];
+  }
+
+  const invoices = await Invoice.find(filter)
+    .populate("client")
+    .sort({ createdAt: -1 })
+    .skip(skip)
+    .limit(limit);
+
+  const total = await Invoice.countDocuments(filter);
+
+  return NextResponse.json({
+    invoices,
+    pagination: {
+      total,
+      page,
+      limit,
+      pages: Math.ceil(total / limit),
+    },
+  });
 }
 
 export async function POST(req: Request) {

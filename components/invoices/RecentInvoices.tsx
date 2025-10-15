@@ -2,7 +2,6 @@
 
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Eye, Ghost } from "lucide-react";
 import CustomLink from "../shared/CustomLink";
 import { useRecentInvoices } from "@/hooks/invoices/useRecentInvoices";
@@ -101,17 +100,6 @@ export const RecentInvoices = () => {
                 <p className="font-semibold text-foreground">
                   {invoice.invoiceNumber}
                 </p>
-                <Badge
-                  className={
-                    statusConfig[invoice.status as keyof typeof statusConfig]
-                      .className
-                  }
-                >
-                  {
-                    statusConfig[invoice.status as keyof typeof statusConfig]
-                      .label
-                  }
-                </Badge>
               </div>
               <p className="text-sm text-muted-foreground">
                 {invoice.clientName}

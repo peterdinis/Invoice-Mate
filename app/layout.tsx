@@ -56,8 +56,8 @@ export default function RootLayout({
           <QueryProvider>
             <TransitionProvider>
               {children}
-              <ScrollToTop />
               <Toaster />
+              <ScrollToTop />
             </TransitionProvider>
           </QueryProvider>
         </ThemeProvider>
