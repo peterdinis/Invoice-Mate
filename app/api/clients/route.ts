@@ -11,7 +11,7 @@ export async function GET(req: NextRequest) {
   const searchTerm = searchParams.get("searchTerm") || "";
   const skip = (page - 1) * limit;
 
-  // ak je searchTerm, použij regex filter na meno/email
+  // Filter for searchTerm on name/email
   const filter = searchTerm
     ? {
         $or: [
@@ -21,13 +21,31 @@ export async function GET(req: NextRequest) {
       }
     : {};
 
-  const [clients, total] = await Promise.all([
-    Client.find(filter).skip(skip).limit(limit),
-    Client.countDocuments(filter),
+  // Use aggregation to include invoice count
+  const clientsWithInvoiceCount = await Client.aggregate([
+    { $match: filter }, // apply search filter
+    {
+      $lookup: {
+        from: "invoices", // MongoDB collection name
+        localField: "_id",
+        foreignField: "client",
+        as: "invoices",
+      },
+    },
+    {
+      $addFields: {
+        invoiceCount: { $size: "$invoices" }, // count invoices
+      },
+    },
+    { $skip: skip },
+    { $limit: limit },
   ]);
 
+  // Get total count for pagination
+  const total = await Client.countDocuments(filter);
+
   return NextResponse.json({
-    data: clients,
+    data: clientsWithInvoiceCount,
     pagination: {
       total,
       page,

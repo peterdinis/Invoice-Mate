@@ -1,6 +1,6 @@
 "use client";
 
-import { FC, useState } from "react";
+import { FC, Suspense, useMemo, useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
+import { Spinner } from "../ui/spinner";
 
 const ClientsWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -32,9 +33,15 @@ const ClientsWrapper: FC = () => {
     limit: 9,
     searchTerm,
   });
+
   const { toast } = useToast();
   const clients = data?.data ?? [];
+
   const pagination = data?.pagination;
+
+  const clientInvoicesCount = useMemo(() => {
+  return clients.map((item) => item.invoices.length);
+}, [clients]);
 
   // State pre dialógy
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
@@ -98,7 +105,7 @@ const ClientsWrapper: FC = () => {
   };
 
   return (
-    <>
+    <Suspense fallback={<Spinner />}>
       <DashboardNavigation />
       <div className="min-h-screen bg-background">
         <div className="container mx-auto px-4 py-8">
@@ -222,13 +229,17 @@ const ClientsWrapper: FC = () => {
                           <p className="text-xs text-muted-foreground">
                             Faktúr
                           </p>
-                          <p className="font-semibold text-foreground">—</p>
+                          <p className="font-semibold text-foreground">
+                            {clientInvoicesCount}
+                          </p>
                         </div>
                         <div>
                           <p className="text-xs text-muted-foreground">
                             Celkom
                           </p>
-                          <p className="font-semibold text-foreground">—</p>
+                          <p className="font-semibold text-foreground">
+                             {clientInvoicesCount}
+                          </p>
                         </div>
                       </div>
                     </Card>
@@ -491,7 +502,7 @@ const ClientsWrapper: FC = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </>
+    </Suspense>
   );
 };
 
