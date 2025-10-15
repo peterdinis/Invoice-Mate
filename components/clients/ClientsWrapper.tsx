@@ -12,6 +12,8 @@ import { Skeleton } from "../ui/skeleton";
 import { motion } from "framer-motion";
 import { useCopyToClipboard } from "@uidotdev/usehooks";
 import { useToast } from "@/hooks/shared/use-toast";
+import { IClient } from "@/models/Client";
+import { useUpdateClient } from "@/hooks/clients/useUpdateClient";
 import {
   Dialog,
   DialogContent,
@@ -36,72 +38,90 @@ const ClientsWrapper: FC = () => {
 
   const { toast } = useToast();
   const clients = data?.data ?? [];
-
   const pagination = data?.pagination;
 
-  const clientInvoicesCount = useMemo(() => {
-  return clients.map((item) => item.invoices.length);
-}, [clients]);
+  const clientInvoicesCount = useMemo(
+    () => clients.map((item) => item.invoices.length),
+    [clients]
+  );
 
-  // State pre dialógy
+  const updateClientMutation = useUpdateClient();
+
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<any>(null);
-  const [editedClient, setEditedClient] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
+  const [editedClient, setEditedClient] = useState<Partial<IClient> | null>(
+    null
+  );
 
-  const handleViewClient = (client: any) => {
+  const handleViewClient = (client: IClient) => {
     setSelectedClient(client);
     setViewDialogOpen(true);
   };
 
-  const handleEditClient = (client: any) => {
+  const handleEditClient = (client: IClient) => {
     setSelectedClient(client);
-    setEditedClient({ ...client }); // Vytvoríme kópiu pre editáciu
+    setEditedClient({ ...client });
     setEditDialogOpen(true);
   };
 
-  const handleDeleteClient = (client: any) => {
+  const handleDeleteClient = (client: IClient) => {
     setSelectedClient(client);
     setDeleteDialogOpen(true);
   };
 
+  const handleInputChange = <K extends keyof IClient>(
+    field: K,
+    value: IClient[K]
+  ) => {
+    setEditedClient((prev) => (prev ? { ...prev, [field]: value } : prev));
+  };
+
   const handleSaveEdit = () => {
-    // Tu pridajte logiku na uloženie zmien
-    console.log("Ukladám zmeny:", editedClient);
+    if (!editedClient || !editedClient._id) return;
 
-    toast({
-      title: "Klient bol upravený",
-      description: `Údaje klienta ${editedClient.name} boli úspešne aktualizované.`,
-      duration: 3000,
-      className: "bg-green-800 text-white font-bold text-base",
-    });
-
-    setEditDialogOpen(false);
-    setSelectedClient(null);
-    setEditedClient(null);
+    updateClientMutation.mutate(
+      {
+        id: editedClient._id,
+        name: editedClient.name,
+        email: editedClient.email,
+        address: editedClient.address,
+      },
+      {
+        onSuccess: (updatedClient) => {
+          toast({
+            title: "Klient bol upravený",
+            description: `Údaje klienta ${updatedClient.name} boli úspešne aktualizované.`,
+            duration: 3000,
+            className: "bg-green-800 text-white font-bold text-base",
+          });
+          setEditDialogOpen(false);
+          setSelectedClient(null);
+          setEditedClient(null);
+        },
+        onError: (error: any) => {
+          toast({
+            title: "Chyba",
+            description: error?.message || "Nepodarilo sa upraviť klienta",
+            duration: 3000,
+            className: "bg-red-600 text-white font-bold text-base",
+          });
+        },
+      }
+    );
   };
 
   const confirmDelete = () => {
-    // Tu pridajte logiku na odstránenie klienta
-    console.log("Odstraňujem klienta:", selectedClient);
-
+    // Tu pridaj logiku pre odstránenie klienta
     toast({
       title: "Klient bol odstránený",
-      description: `Klient ${selectedClient.name} bol úspešne odstránený.`,
+      description: `Klient ${selectedClient?.name} bol úspešne odstránený.`,
       duration: 3000,
       className: "bg-green-800 text-white font-bold text-base",
     });
-
     setDeleteDialogOpen(false);
     setSelectedClient(null);
-  };
-
-  const handleInputChange = (field: string, value: string) => {
-    setEditedClient((prev: any) => ({
-      ...prev,
-      [field]: value,
-    }));
   };
 
   return (
@@ -139,7 +159,6 @@ const ClientsWrapper: FC = () => {
               </div>
             </div>
 
-            {/* Loading skeleton */}
             {isLoading ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {[...Array(6)].map((_, i) => (
@@ -162,15 +181,13 @@ const ClientsWrapper: FC = () => {
                 className="flex flex-col items-center justify-center py-16 text-muted-foreground"
               >
                 <SearchIcon className="w-12 h-12 mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium">
-                  Žiadni klienti neboli nájdení
-                </p>
+                <p className="text-lg font-medium">Žiadni klienti neboli nájdení</p>
                 <p className="text-sm mt-1">Skúste zmeniť hľadaný výraz</p>
               </motion.div>
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {clients.map((client) => (
+                  {clients.map((client, index) => (
                     <Card
                       key={client._id}
                       className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
@@ -217,29 +234,17 @@ const ClientsWrapper: FC = () => {
                         </div>
                       </div>
 
-                      <h3 className="font-semibold text-lg text-foreground mb-1">
-                        {client.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        {client.email}
-                      </p>
+                      <h3 className="font-semibold text-lg text-foreground mb-1">{client.name}</h3>
+                      <p className="text-sm text-muted-foreground mb-4">{client.email}</p>
 
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                         <div>
-                          <p className="text-xs text-muted-foreground">
-                            Faktúr
-                          </p>
-                          <p className="font-semibold text-foreground">
-                            {clientInvoicesCount}
-                          </p>
+                          <p className="text-xs text-muted-foreground">Faktúr</p>
+                          <p className="font-semibold text-foreground">{clientInvoicesCount[index]}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">
-                            Celkom
-                          </p>
-                          <p className="font-semibold text-foreground">
-                             {clientInvoicesCount}
-                          </p>
+                          <p className="text-xs text-muted-foreground">Celkom</p>
+                          <p className="font-semibold text-foreground">{clientInvoicesCount[index]}</p>
                         </div>
                       </div>
                     </Card>
@@ -264,7 +269,7 @@ const ClientsWrapper: FC = () => {
                       disabled={page >= pagination.pages}
                       onClick={() =>
                         setPage((p) =>
-                          pagination && p < pagination.pages ? p + 1 : p,
+                          pagination && p < pagination.pages ? p + 1 : p
                         )
                       }
                     >
@@ -289,9 +294,7 @@ const ClientsWrapper: FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Detail klienta</DialogTitle>
-            <DialogDescription>
-              Informácie o vybranom klientovi
-            </DialogDescription>
+            <DialogDescription>Informácie o vybranom klientovi</DialogDescription>
           </DialogHeader>
 
           {selectedClient && (
@@ -301,32 +304,21 @@ const ClientsWrapper: FC = () => {
                   {selectedClient.name?.charAt(0) || "K"}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">
-                    {selectedClient.name}
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedClient.email}
-                  </p>
+                  <h3 className="font-semibold text-lg">{selectedClient.name}</h3>
+                  <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                 <div>
                   <p className="text-xs text-muted-foreground">Faktúr</p>
-                  <p className="font-semibold">—</p>
+                  <p className="font-semibold">{selectedClient.invoices?.length ?? 0}</p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Celkom</p>
-                  <p className="font-semibold">—</p>
+                  <p className="font-semibold">{selectedClient.invoices?.length ?? 0}</p>
                 </div>
               </div>
-
-              {selectedClient.phone && (
-                <div>
-                  <p className="text-xs text-muted-foreground">Telefón</p>
-                  <p className="font-semibold">{selectedClient.phone}</p>
-                </div>
-              )}
 
               {selectedClient.address && (
                 <div>
@@ -346,14 +338,16 @@ const ClientsWrapper: FC = () => {
             <Button variant="outline" onClick={() => setViewDialogOpen(false)}>
               Zavrieť
             </Button>
-            <Button
-              onClick={() => {
-                handleEditClient(selectedClient);
-                setViewDialogOpen(false);
-              }}
-            >
-              Upraviť klienta
-            </Button>
+            {selectedClient && (
+              <Button
+                onClick={() => {
+                  handleEditClient(selectedClient);
+                  setViewDialogOpen(false);
+                }}
+              >
+                Upraviť klienta
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -363,9 +357,7 @@ const ClientsWrapper: FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Upraviť klienta</DialogTitle>
-            <DialogDescription>
-              Upravte informácie o klientovi
-            </DialogDescription>
+            <DialogDescription>Upravte informácie o klientovi</DialogDescription>
           </DialogHeader>
 
           {editedClient && (
@@ -376,9 +368,7 @@ const ClientsWrapper: FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Upraviť klienta</h3>
-                  <p className="text-sm text-muted-foreground">
-                    Aktualizujte údaje
-                  </p>
+                  <p className="text-sm text-muted-foreground">Aktualizujte údaje</p>
                 </div>
               </div>
 
@@ -405,36 +395,12 @@ const ClientsWrapper: FC = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">Telefón</Label>
-                  <Input
-                    id="phone"
-                    value={editedClient.phone || ""}
-                    onChange={(e) => handleInputChange("phone", e.target.value)}
-                    placeholder="Zadajte telefónne číslo"
-                  />
-                </div>
-
-                <div className="space-y-2">
                   <Label htmlFor="address">Adresa</Label>
                   <Input
                     id="address"
                     value={editedClient.address || ""}
-                    onChange={(e) =>
-                      handleInputChange("address", e.target.value)
-                    }
+                    onChange={(e) => handleInputChange("address", e.target.value)}
                     placeholder="Zadajte adresu"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="company">Spoločnosť</Label>
-                  <Input
-                    id="company"
-                    value={editedClient.company || ""}
-                    onChange={(e) =>
-                      handleInputChange("company", e.target.value)
-                    }
-                    placeholder="Zadajte názov spoločnosti"
                   />
                 </div>
               </div>
@@ -442,11 +408,7 @@ const ClientsWrapper: FC = () => {
           )}
 
           <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setEditDialogOpen(false)}
-              className="flex-1"
-            >
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="flex-1">
               Zrušiť
             </Button>
             <Button onClick={handleSaveEdit} className="flex-1">
@@ -460,9 +422,7 @@ const ClientsWrapper: FC = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-red-600">
-              Odstrániť klienta
-            </DialogTitle>
+            <DialogTitle className="text-red-600">Odstrániť klienta</DialogTitle>
             <DialogDescription>
               Naozaj chcete odstrániť tohto klienta? Táto akcia je nevratná.
             </DialogDescription>
@@ -476,27 +436,17 @@ const ClientsWrapper: FC = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold">{selectedClient.name}</h4>
-                  <p className="text-sm text-muted-foreground">
-                    {selectedClient.email}
-                  </p>
+                  <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
                 </div>
               </div>
             </div>
           )}
 
           <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button
-              variant="outline"
-              onClick={() => setDeleteDialogOpen(false)}
-              className="flex-1"
-            >
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="flex-1">
               Zrušiť
             </Button>
-            <Button
-              variant="destructive"
-              onClick={confirmDelete}
-              className="flex-1"
-            >
+            <Button variant="destructive" onClick={confirmDelete} className="flex-1">
               Odstrániť
             </Button>
           </DialogFooter>

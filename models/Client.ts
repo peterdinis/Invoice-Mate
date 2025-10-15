@@ -1,9 +1,11 @@
 import mongoose, { Schema, Document, Types } from "mongoose";
+import { IInvoice } from "./Invoice";
 
 export interface IClient extends Document {
   name: string;
   email: string;
   address?: string;
+  invoices?: Types.Array<IInvoice>;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,7 +30,9 @@ const ClientSchema = new Schema<IClient>(
   },
   {
     timestamps: true,
-  },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
 );
 
 ClientSchema.virtual("invoices", {

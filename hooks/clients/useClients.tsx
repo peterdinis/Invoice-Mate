@@ -9,6 +9,7 @@ export interface Client {
   address?: string;
   createdAt: string;
   updatedAt: string;
+  invoices: any[]
 }
 
 interface ClientsResponse {
