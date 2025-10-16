@@ -3,22 +3,22 @@ import Client from "@/models/Client";
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
 
-export async function PATCH(req: NextRequest, props: { params: Promise<{ id: string }> }) {
+export async function PATCH(
+  req: NextRequest,
+  props: { params: Promise<{ id: string }> },
+) {
   const params = await props.params;
   try {
     await connectToDB();
 
-    console.log("P", params)
+    console.log("P", params);
     const clientId = params.id;
 
     console.log("ClientId", clientId);
 
     // 1️⃣ Skontroluj validitu ObjectId
     if (!mongoose.Types.ObjectId.isValid(clientId)) {
-      return NextResponse.json(
-        { error: "Invalid client ID" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "Invalid client ID" }, { status: 400 });
     }
 
     const body = await req.json();
@@ -39,12 +39,15 @@ export async function PATCH(req: NextRequest, props: { params: Promise<{ id: str
         ...(email !== undefined && { email }),
         ...(address !== undefined && { address }),
       },
-      { new: true } // vráti aktualizovaný dokument
+      { new: true }, // vráti aktualizovaný dokument
     ).populate("invoices"); // ak chceš mať invoices priamo vo výsledku
 
     return NextResponse.json(updatedClient, { status: 200 });
   } catch (error: any) {
     console.error("Error updating client:", error);
-    return NextResponse.json({ error: "Something went wrong" }, { status: 500 });
+    return NextResponse.json(
+      { error: "Something went wrong" },
+      { status: 500 },
+    );
   }
 }

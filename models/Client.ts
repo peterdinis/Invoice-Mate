@@ -32,7 +32,7 @@ const ClientSchema = new Schema<IClient>(
     timestamps: true,
     toJSON: { virtuals: true },
     toObject: { virtuals: true },
-  }
+  },
 );
 
 ClientSchema.virtual("invoices", {

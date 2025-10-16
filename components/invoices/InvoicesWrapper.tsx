@@ -9,6 +9,7 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
+import jsPDF from "jspdf";
 import {
   Plus,
   Search,
@@ -18,7 +19,6 @@ import {
   Loader2,
   GhostIcon,
   FileText,
-  Download,
 } from "lucide-react";
 import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { Button } from "../ui/button";
@@ -51,8 +51,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -60,6 +58,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import autoTable from "jspdf-autotable";
 
 interface Invoice {
   _id: string;
@@ -104,7 +103,9 @@ const statusConfig = {
 };
 
 const getStatusConfig = (status: string) => {
-  return statusConfig[status as keyof typeof statusConfig] || statusConfig.draft;
+  return (
+    statusConfig[status as keyof typeof statusConfig] || statusConfig.draft
+  );
 };
 
 const ITEMS_PER_PAGE = 5;
@@ -125,7 +126,7 @@ const InvoicesWrapper: FC = () => {
     pageIndex,
     ITEMS_PER_PAGE,
     selectedFolder as unknown as string,
-    searchTerm
+    searchTerm,
   );
 
   useEffect(() => {
@@ -154,21 +155,92 @@ const InvoicesWrapper: FC = () => {
     setPdfDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    console.log("Odstraňujem faktúru:", selectedInvoice);
-    setTimeout(() => {
+  const confirmDelete = async () => {
+    if (!selectedInvoice) return;
+    try {
+      // replace with real API call
+      const res = await fetch(`/api/invoices/${selectedInvoice._id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Nepodarilo sa odstrániť faktúru");
       setDeleteDialogOpen(false);
       setSelectedInvoice(null);
       refetch();
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      // fallback: close dialog and refetch
+      setDeleteDialogOpen(false);
+      refetch();
+    }
   };
 
   const handleDownloadPDF = () => {
-    console.log("Generujem PDF pre faktúru:", selectedInvoice);
-    setTimeout(() => {
-      setPdfDialogOpen(false);
-      setSelectedInvoice(null);
-    }, 1500);
+    if (!selectedInvoice) return;
+
+    const doc = new jsPDF();
+
+    // 🔹 Hlavička
+    doc.setFontSize(20);
+    doc.text("FAKTÚRA", 105, 20, { align: "center" });
+
+    doc.setFontSize(12);
+    doc.text(`Číslo faktúry: ${selectedInvoice.invoiceNumber}`, 14, 35);
+    doc.text(
+      `Klient: ${typeof selectedInvoice.client === "object" ? selectedInvoice.client.name : "Neznámy klient"}`,
+      14,
+      42,
+    );
+    doc.text(
+      `Email: ${typeof selectedInvoice.client === "object" ? selectedInvoice.client.email : "-"}`,
+      14,
+      49,
+    );
+    doc.text(
+      `Dátum vystavenia: ${new Date(selectedInvoice.invoiceDate).toLocaleDateString("sk-SK")}`,
+      14,
+      56,
+    );
+    doc.text(
+      `Splatnosť: ${new Date(selectedInvoice.dueDate).toLocaleDateString("sk-SK")}`,
+      14,
+      63,
+    );
+    doc.text(`Stav: ${getStatusConfig(selectedInvoice.status).label}`, 14, 70);
+
+    // 🔹 Položky faktúry tabuľka
+    if (selectedInvoice.items && selectedInvoice.items.length > 0) {
+      const tableData = selectedInvoice.items.map((item) => [
+        item.description,
+        item.quantity,
+        `$${item.price.toFixed(2)}`,
+        `$${(item.quantity * item.price).toFixed(2)}`,
+      ]);
+
+      autoTable(doc, {
+        startY: 80,
+        head: [["Popis", "Množstvo", "Cena", "Celkom"]],
+        body: tableData,
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+        foot: [
+          [
+            "",
+            "",
+            "Celkom",
+            `$${selectedInvoice.items.reduce((sum, i) => sum + i.price * i.quantity, 0).toFixed(2)}`,
+          ],
+        ],
+        footStyles: { fillColor: [41, 128, 185], textColor: 255 },
+      });
+    }
+
+    doc.setFontSize(10);
+    doc.text("Ďakujeme za spoluprácu!", 14, doc.internal.pageSize.height - 20);
+
+    doc.save(`faktura_${selectedInvoice.invoiceNumber}.pdf`);
+
+    setPdfDialogOpen(false);
+    setSelectedInvoice(null);
   };
 
   const handleSaveEdit = async () => {
@@ -192,14 +264,17 @@ const InvoicesWrapper: FC = () => {
       accessorKey: "invoiceNumber",
       header: "Číslo",
       enableSorting: true,
-      cell: (info) => <span className="font-medium">{info.getValue() as string}</span>,
+      cell: (info) => (
+        <span className="font-medium">{info.getValue() as string}</span>
+      ),
     },
     {
       accessorKey: "client",
       header: "Klient",
       cell: (info) => {
         const client = info.getValue();
-        const clientName = typeof client === "object" ? client.name : "Unknown Client";
+        const clientName =
+          typeof client === "object" ? client.name : "Unknown Client";
         return <span>{clientName}</span>;
       },
     },
@@ -207,7 +282,11 @@ const InvoicesWrapper: FC = () => {
       accessorKey: "total",
       header: "Suma",
       enableSorting: true,
-      cell: (info) => <span className="font-semibold">${(info.getValue() as number).toFixed(2)}</span>,
+      cell: (info) => (
+        <span className="font-semibold">
+          ${(info.getValue() as number).toFixed(2)}
+        </span>
+      ),
     },
     {
       accessorKey: "status",
@@ -217,7 +296,9 @@ const InvoicesWrapper: FC = () => {
         const status = info.getValue() as string;
         const cfg = getStatusConfig(status);
         return (
-          <span className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${cfg.className}`}>
+          <span
+            className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${cfg.className}`}
+          >
             {cfg.label}
           </span>
         );
@@ -227,7 +308,11 @@ const InvoicesWrapper: FC = () => {
       accessorKey: "invoiceDate",
       header: "Dátum",
       enableSorting: true,
-      cell: (info) => <span className="text-muted-foreground">{new Date(info.getValue() as string).toLocaleDateString("sk-SK")}</span>,
+      cell: (info) => (
+        <span className="text-muted-foreground">
+          {new Date(info.getValue() as string).toLocaleDateString("sk-SK")}
+        </span>
+      ),
       sortingFn: (a, b) =>
         new Date(a.getValue<string>("invoiceDate")).getTime() -
         new Date(b.getValue<string>("invoiceDate")).getTime(),
@@ -237,16 +322,36 @@ const InvoicesWrapper: FC = () => {
       header: "Akcie",
       cell: ({ row }) => (
         <div className="flex justify-end gap-1">
-          <Button variant="ghost" size="icon" onClick={() => handleViewInvoice(row.original)} title="Zobraziť detail">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleViewInvoice(row.original)}
+            title="Zobraziť detail"
+          >
             <Eye className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => handleEditInvoice(row.original)} title="Upraviť faktúru">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleEditInvoice(row.original)}
+            title="Upraviť faktúru"
+          >
             <Edit className="w-4 h-4" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => handleGeneratePDF(row.original)} title="Generovať PDF">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleGeneratePDF(row.original)}
+            title="Generovať PDF"
+          >
             <FileText className="w-4 h-4 text-blue-600" />
           </Button>
-          <Button variant="ghost" size="icon" onClick={() => handleDeleteInvoice(row.original)} title="Odstrániť faktúru">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => handleDeleteInvoice(row.original)}
+            title="Odstrániť faktúru"
+          >
             <Trash2 className="w-4 h-4 text-destructive" />
           </Button>
         </div>
@@ -255,10 +360,12 @@ const InvoicesWrapper: FC = () => {
   ];
 
   const tableData = useMemo(() => {
-    return data?.invoices.map((invoice) => ({
-      ...invoice,
-      id: invoice.invoiceNumber || invoice._id,
-    })) || [];
+    return (
+      data?.invoices.map((invoice) => ({
+        ...invoice,
+        id: invoice.invoiceNumber || invoice._id,
+      })) || []
+    );
   }, [data?.invoices]);
 
   const table = useReactTable<Invoice>({
@@ -281,8 +388,12 @@ const InvoicesWrapper: FC = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text">Faktúry</h1>
-              <p className="text-muted-foreground mt-2">Spravujte a sledujte všetky vaše faktúry</p>
+              <h1 className="text-4xl font-bold bg-gradient-primary bg-clip-text">
+                Faktúry
+              </h1>
+              <p className="text-muted-foreground mt-2">
+                Spravujte a sledujte všetky vaše faktúry
+              </p>
             </div>
             <CustomLink href="/invoices/new">
               <Button className="gap-2" size="lg">
@@ -322,7 +433,9 @@ const InvoicesWrapper: FC = () => {
                 </div>
               ) : isError ? (
                 <div className="text-center py-12">
-                  <p className="text-destructive">Chyba pri načítaní faktúr: {error?.message}</p>
+                  <p className="text-destructive">
+                    Chyba pri načítaní faktúr: {error?.message}
+                  </p>
                 </div>
               ) : tableData.length === 0 ? (
                 <div className="text-center py-12">
@@ -347,33 +460,53 @@ const InvoicesWrapper: FC = () => {
                       <tr className="border-b border-border bg-muted/50">
                         {table.getHeaderGroups().map((headerGroup) =>
                           headerGroup.headers.map((header) => (
-                            <th key={header.id} className="text-left py-3 px-4 font-semibold text-sm">
+                            <th
+                              key={header.id}
+                              className="text-left py-3 px-4 font-semibold text-sm"
+                            >
                               {header.isPlaceholder ? null : (
                                 <div
-                                  className={header.column.getCanSort() ? "cursor-pointer select-none flex items-center gap-2" : ""}
+                                  className={
+                                    header.column.getCanSort()
+                                      ? "cursor-pointer select-none flex items-center gap-2"
+                                      : ""
+                                  }
                                   onClick={header.column.getToggleSortingHandler()}
                                 >
-                                  {flexRender(header.column.columnDef.header, header.getContext())}
+                                  {flexRender(
+                                    header.column.columnDef.header,
+                                    header.getContext(),
+                                  )}
                                   {header.column.getCanSort() && (
                                     <span className="text-xs">
                                       {{
                                         asc: "↑",
                                         desc: "↓",
-                                      }[header.column.getIsSorted() as string] ?? "↕"}
+                                      }[
+                                        header.column.getIsSorted() as string
+                                      ] ?? "↕"}
                                     </span>
                                   )}
                                 </div>
                               )}
                             </th>
-                          ))
+                          )),
                         )}
                       </tr>
                     </thead>
                     <tbody>
                       {table.getRowModel().rows.map((row) => (
-                        <tr key={row.id} className="border-b border-border hover:bg-muted/50 transition-colors">
+                        <tr
+                          key={row.id}
+                          className="border-b border-border hover:bg-muted/50 transition-colors"
+                        >
                           {row.getVisibleCells().map((cell) => (
-                            <td key={cell.id} className="py-4 px-4">{flexRender(cell.column.columnDef.cell, cell.getContext())}</td>
+                            <td key={cell.id} className="py-4 px-4">
+                              {flexRender(
+                                cell.column.columnDef.cell,
+                                cell.getContext(),
+                              )}
+                            </td>
                           ))}
                         </tr>
                       ))}
@@ -388,8 +521,14 @@ const InvoicesWrapper: FC = () => {
                     <PaginationContent>
                       <PaginationItem>
                         <PaginationPrevious
-                          onClick={() => setPageIndex((prev) => Math.max(1, prev - 1))}
-                          className={pageIndex === 1 ? "opacity-50 pointer-events-none" : "cursor-pointer"}
+                          onClick={() =>
+                            setPageIndex((prev) => Math.max(1, prev - 1))
+                          }
+                          className={
+                            pageIndex === 1
+                              ? "opacity-50 pointer-events-none"
+                              : "cursor-pointer"
+                          }
                         />
                       </PaginationItem>
 
@@ -407,8 +546,16 @@ const InvoicesWrapper: FC = () => {
 
                       <PaginationItem>
                         <PaginationNext
-                          onClick={() => setPageIndex((prev) => Math.min(totalPages, prev + 1))}
-                          className={pageIndex === totalPages ? "opacity-50 pointer-events-none" : "cursor-pointer"}
+                          onClick={() =>
+                            setPageIndex((prev) =>
+                              Math.min(totalPages, prev + 1),
+                            )
+                          }
+                          className={
+                            pageIndex === totalPages
+                              ? "opacity-50 pointer-events-none"
+                              : "cursor-pointer"
+                          }
                         />
                       </PaginationItem>
                     </PaginationContent>
@@ -420,7 +567,126 @@ const InvoicesWrapper: FC = () => {
         </div>
       </div>
 
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      {/* 🔹 VIEW INVOICE DIALOG */}
+      <Dialog
+        open={viewDialogOpen}
+        onOpenChange={(open) => {
+          setViewDialogOpen(open);
+          if (!open) setSelectedInvoice(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Detail faktúry</DialogTitle>
+            <DialogDescription>Podrobné informácie o faktúre</DialogDescription>
+          </DialogHeader>
+
+          {selectedInvoice ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Číslo faktúry</p>
+                  <p className="font-medium">{selectedInvoice.invoiceNumber}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Klient</p>
+                  <p className="font-medium">
+                    {typeof selectedInvoice.client === "object"
+                      ? selectedInvoice.client.name
+                      : "Neznámy klient"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">
+                    Dátum vystavenia
+                  </p>
+                  <p>
+                    {new Date(selectedInvoice.invoiceDate).toLocaleDateString(
+                      "sk-SK",
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Splatnosť</p>
+                  <p>
+                    {new Date(selectedInvoice.dueDate).toLocaleDateString(
+                      "sk-SK",
+                    )}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Suma</p>
+                  <p className="font-semibold">
+                    ${selectedInvoice.total.toFixed(2)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Stav</p>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                      getStatusConfig(selectedInvoice.status).className
+                    }`}
+                  >
+                    {getStatusConfig(selectedInvoice.status).label}
+                  </span>
+                </div>
+              </div>
+
+              {selectedInvoice.items && selectedInvoice.items.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mt-4 mb-2">Položky</h4>
+                  <table className="w-full text-sm border border-border rounded-md overflow-hidden">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-2">Popis</th>
+                        <th className="text-left p-2">Množstvo</th>
+                        <th className="text-left p-2">Cena</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedInvoice.items.map((item, idx) => (
+                        <tr key={idx} className="border-t border-border">
+                          <td className="p-2">{item.description}</td>
+                          <td className="p-2">{item.quantity}</td>
+                          <td className="p-2">${item.price.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setViewDialogOpen(false)}
+                >
+                  Zavrieť
+                </Button>
+                <Button
+                  onClick={() => {
+                    setViewDialogOpen(false);
+                    setEditDialogOpen(true);
+                  }}
+                >
+                  Upraviť
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p>Načítavam údaje...</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 🔹 EDIT DIALOG */}
+      <Dialog
+        open={editDialogOpen}
+        onOpenChange={(open) => {
+          setEditDialogOpen(open);
+          if (!open) setSelectedInvoice(null);
+        }}
+      >
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Upraviť faktúru</DialogTitle>
@@ -434,7 +700,9 @@ const InvoicesWrapper: FC = () => {
                   <label className="text-sm font-medium">Stav faktúry</label>
                   <Select
                     value={editedStatus}
-                    onValueChange={(val: Invoice["status"]) => setEditedStatus(val)}
+                    onValueChange={(val: Invoice["status"]) =>
+                      setEditedStatus(val)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Vyberte stav" />
@@ -452,8 +720,87 @@ const InvoicesWrapper: FC = () => {
           )}
 
           <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Zrušiť</Button>
+            <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
+              Zrušiť
+            </Button>
             <Button onClick={handleSaveEdit}>Uložiť zmeny</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 🔹 DELETE DIALOG */}
+      <Dialog
+        open={deleteDialogOpen}
+        onOpenChange={(open) => {
+          setDeleteDialogOpen(open);
+          if (!open) setSelectedInvoice(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Odstrániť faktúru</DialogTitle>
+            <DialogDescription>
+              Naozaj chcete odstrániť túto faktúru? Táto akcia je nevratná.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">
+              {selectedInvoice
+                ? `Faktúra ${selectedInvoice.invoiceNumber} — ${typeof selectedInvoice.client === "object" ? selectedInvoice.client.name : ""}`
+                : "Žiadna faktúra vybraná."}
+            </p>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+            >
+              Zrušiť
+            </Button>
+            <Button
+              className="bg-destructive text-white"
+              onClick={confirmDelete}
+            >
+              Odstrániť
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 🔹 PDF DIALOG */}
+      <Dialog
+        open={pdfDialogOpen}
+        onOpenChange={(open) => {
+          setPdfDialogOpen(open);
+          if (!open) setSelectedInvoice(null);
+        }}
+      >
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Generovať PDF</DialogTitle>
+            <DialogDescription>
+              Vytvoriť a stiahnuť PDF pre túto faktúru.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-3">
+            <p className="text-sm text-muted-foreground">
+              {selectedInvoice
+                ? `Faktúra ${selectedInvoice.invoiceNumber}`
+                : "Žiadna faktúra vybraná."}
+            </p>
+            <p className="text-sm">
+              Kliknite na Generovať pre vytvorenie a stiahnutie PDF.
+            </p>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>
+              Zrušiť
+            </Button>
+            <Button onClick={handleDownloadPDF}>Generovať</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -9,7 +9,7 @@ export interface Client {
   address?: string;
   createdAt: string;
   updatedAt: string;
-  invoices: any[]
+  invoices: any[];
 }
 
 interface ClientsResponse {

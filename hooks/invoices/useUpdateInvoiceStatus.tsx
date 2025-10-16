@@ -28,8 +28,8 @@ export const useUpdateInvoiceStatus = () => {
     },
     onSuccess: () => {
       // Invalidate relevant queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ['invoices'] });
-      queryClient.invalidateQueries({ queryKey: ['paginatedInvoices'] });
+      queryClient.invalidateQueries({ queryKey: ["invoices"] });
+      queryClient.invalidateQueries({ queryKey: ["paginatedInvoices"] });
     },
   });
 };

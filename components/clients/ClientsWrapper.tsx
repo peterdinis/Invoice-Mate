@@ -42,7 +42,7 @@ const ClientsWrapper: FC = () => {
 
   const clientInvoicesCount = useMemo(
     () => clients.map((item) => item.invoices.length),
-    [clients]
+    [clients],
   );
 
   const updateClientMutation = useUpdateClient();
@@ -52,7 +52,7 @@ const ClientsWrapper: FC = () => {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
   const [editedClient, setEditedClient] = useState<Partial<IClient> | null>(
-    null
+    null,
   );
 
   const handleViewClient = (client: IClient) => {
@@ -73,7 +73,7 @@ const ClientsWrapper: FC = () => {
 
   const handleInputChange = <K extends keyof IClient>(
     field: K,
-    value: IClient[K]
+    value: IClient[K],
   ) => {
     setEditedClient((prev) => (prev ? { ...prev, [field]: value } : prev));
   };
@@ -108,7 +108,7 @@ const ClientsWrapper: FC = () => {
             className: "bg-red-600 text-white font-bold text-base",
           });
         },
-      }
+      },
     );
   };
 
@@ -181,7 +181,9 @@ const ClientsWrapper: FC = () => {
                 className="flex flex-col items-center justify-center py-16 text-muted-foreground"
               >
                 <SearchIcon className="w-12 h-12 mb-4 text-muted-foreground" />
-                <p className="text-lg font-medium">Žiadni klienti neboli nájdení</p>
+                <p className="text-lg font-medium">
+                  Žiadni klienti neboli nájdení
+                </p>
                 <p className="text-sm mt-1">Skúste zmeniť hľadaný výraz</p>
               </motion.div>
             ) : (
@@ -234,17 +236,29 @@ const ClientsWrapper: FC = () => {
                         </div>
                       </div>
 
-                      <h3 className="font-semibold text-lg text-foreground mb-1">{client.name}</h3>
-                      <p className="text-sm text-muted-foreground mb-4">{client.email}</p>
+                      <h3 className="font-semibold text-lg text-foreground mb-1">
+                        {client.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-4">
+                        {client.email}
+                      </p>
 
                       <div className="grid grid-cols-2 gap-4 pt-4 border-t border-border">
                         <div>
-                          <p className="text-xs text-muted-foreground">Faktúr</p>
-                          <p className="font-semibold text-foreground">{clientInvoicesCount[index]}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Faktúr
+                          </p>
+                          <p className="font-semibold text-foreground">
+                            {clientInvoicesCount[index]}
+                          </p>
                         </div>
                         <div>
-                          <p className="text-xs text-muted-foreground">Celkom</p>
-                          <p className="font-semibold text-foreground">{clientInvoicesCount[index]}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Celkom
+                          </p>
+                          <p className="font-semibold text-foreground">
+                            {clientInvoicesCount[index]}
+                          </p>
                         </div>
                       </div>
                     </Card>
@@ -269,7 +283,7 @@ const ClientsWrapper: FC = () => {
                       disabled={page >= pagination.pages}
                       onClick={() =>
                         setPage((p) =>
-                          pagination && p < pagination.pages ? p + 1 : p
+                          pagination && p < pagination.pages ? p + 1 : p,
                         )
                       }
                     >
@@ -294,7 +308,9 @@ const ClientsWrapper: FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Detail klienta</DialogTitle>
-            <DialogDescription>Informácie o vybranom klientovi</DialogDescription>
+            <DialogDescription>
+              Informácie o vybranom klientovi
+            </DialogDescription>
           </DialogHeader>
 
           {selectedClient && (
@@ -304,19 +320,27 @@ const ClientsWrapper: FC = () => {
                   {selectedClient.name?.charAt(0) || "K"}
                 </div>
                 <div>
-                  <h3 className="font-semibold text-lg">{selectedClient.name}</h3>
-                  <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
+                  <h3 className="font-semibold text-lg">
+                    {selectedClient.name}
+                  </h3>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedClient.email}
+                  </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-4 pt-4 border-t">
                 <div>
                   <p className="text-xs text-muted-foreground">Faktúr</p>
-                  <p className="font-semibold">{selectedClient.invoices?.length ?? 0}</p>
+                  <p className="font-semibold">
+                    {selectedClient.invoices?.length ?? 0}
+                  </p>
                 </div>
                 <div>
                   <p className="text-xs text-muted-foreground">Celkom</p>
-                  <p className="font-semibold">{selectedClient.invoices?.length ?? 0}</p>
+                  <p className="font-semibold">
+                    {selectedClient.invoices?.length ?? 0}
+                  </p>
                 </div>
               </div>
 
@@ -357,7 +381,9 @@ const ClientsWrapper: FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Upraviť klienta</DialogTitle>
-            <DialogDescription>Upravte informácie o klientovi</DialogDescription>
+            <DialogDescription>
+              Upravte informácie o klientovi
+            </DialogDescription>
           </DialogHeader>
 
           {editedClient && (
@@ -368,7 +394,9 @@ const ClientsWrapper: FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Upraviť klienta</h3>
-                  <p className="text-sm text-muted-foreground">Aktualizujte údaje</p>
+                  <p className="text-sm text-muted-foreground">
+                    Aktualizujte údaje
+                  </p>
                 </div>
               </div>
 
@@ -399,7 +427,9 @@ const ClientsWrapper: FC = () => {
                   <Input
                     id="address"
                     value={editedClient.address || ""}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("address", e.target.value)
+                    }
                     placeholder="Zadajte adresu"
                   />
                 </div>
@@ -408,7 +438,11 @@ const ClientsWrapper: FC = () => {
           )}
 
           <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setEditDialogOpen(false)} className="flex-1">
+            <Button
+              variant="outline"
+              onClick={() => setEditDialogOpen(false)}
+              className="flex-1"
+            >
               Zrušiť
             </Button>
             <Button onClick={handleSaveEdit} className="flex-1">
@@ -422,7 +456,9 @@ const ClientsWrapper: FC = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-red-600">Odstrániť klienta</DialogTitle>
+            <DialogTitle className="text-red-600">
+              Odstrániť klienta
+            </DialogTitle>
             <DialogDescription>
               Naozaj chcete odstrániť tohto klienta? Táto akcia je nevratná.
             </DialogDescription>
@@ -436,17 +472,27 @@ const ClientsWrapper: FC = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold">{selectedClient.name}</h4>
-                  <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedClient.email}
+                  </p>
                 </div>
               </div>
             </div>
           )}
 
           <DialogFooter className="flex gap-2 sm:gap-0">
-            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)} className="flex-1">
+            <Button
+              variant="outline"
+              onClick={() => setDeleteDialogOpen(false)}
+              className="flex-1"
+            >
               Zrušiť
             </Button>
-            <Button variant="destructive" onClick={confirmDelete} className="flex-1">
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              className="flex-1"
+            >
               Odstrániť
             </Button>
           </DialogFooter>
