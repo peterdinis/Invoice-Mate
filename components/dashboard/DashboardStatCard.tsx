@@ -1,15 +1,6 @@
 import { Card } from "@/components/ui/card";
-import { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
-
-interface DashboardStatCardProps {
-  title: string;
-  value: string;
-  icon: LucideIcon;
-  trend?: string;
-  trendUp?: boolean;
-  variant?: "default" | "success" | "warning";
-}
+import { DashboardStatCardProps } from "@/types/DashboardTypes";
 
 export const DashboardStatCard = ({
   title,

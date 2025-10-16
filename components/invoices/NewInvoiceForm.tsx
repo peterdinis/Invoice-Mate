@@ -24,13 +24,7 @@ import {
   useCreateInvoice,
 } from "@/hooks/invoices/useCreateNewInvoice";
 import { toast } from "sonner";
-
-interface InvoiceItem {
-  id: string;
-  description: string;
-  quantity: number;
-  rate: number;
-}
+import { InvoiceItem } from "@/types/InvoiceTypes";
 
 const NewInvoice = () => {
   const navigate = useRouter();
