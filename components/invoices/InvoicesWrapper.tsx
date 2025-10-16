@@ -9,6 +9,7 @@ import {
   useReactTable,
   SortingState,
 } from "@tanstack/react-table";
+import jsPDF from "jspdf";
 import {
   Plus,
   Search,
@@ -18,7 +19,6 @@ import {
   Loader2,
   GhostIcon,
   FileText,
-  Download,
 } from "lucide-react";
 import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { Button } from "../ui/button";
@@ -51,8 +51,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
 import {
   Select,
   SelectContent,
@@ -65,12 +63,12 @@ interface Invoice {
   _id: string;
   invoiceNumber: string;
   client:
-    | {
-        _id: string;
-        name: string;
-        email: string;
-      }
-    | string;
+  | {
+    _id: string;
+    name: string;
+    email: string;
+  }
+  | string;
   total: number;
   status: "paid" | "pending" | "overdue" | "draft";
   invoiceDate: string;
@@ -154,21 +152,53 @@ const InvoicesWrapper: FC = () => {
     setPdfDialogOpen(true);
   };
 
-  const confirmDelete = () => {
-    console.log("Odstraňujem faktúru:", selectedInvoice);
-    setTimeout(() => {
+  const confirmDelete = async () => {
+    if (!selectedInvoice) return;
+    try {
+      // replace with real API call
+      const res = await fetch(`/api/invoices/${selectedInvoice._id}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Nepodarilo sa odstrániť faktúru");
       setDeleteDialogOpen(false);
       setSelectedInvoice(null);
       refetch();
-    }, 1000);
+    } catch (err) {
+      console.error(err);
+      // fallback: close dialog and refetch
+      setDeleteDialogOpen(false);
+      refetch();
+    }
   };
 
   const handleDownloadPDF = () => {
-    console.log("Generujem PDF pre faktúru:", selectedInvoice);
-    setTimeout(() => {
-      setPdfDialogOpen(false);
-      setSelectedInvoice(null);
-    }, 1500);
+    if (!selectedInvoice) return;
+
+    const doc = new jsPDF();
+
+    doc.setFontSize(18);
+    doc.text(`Faktúra: ${selectedInvoice.invoiceNumber}`, 14, 20);
+
+    doc.setFontSize(12);
+    doc.text(`Klient: ${typeof selectedInvoice.client === "object" ? selectedInvoice.client.name : "Neznámy klient"}`, 14, 30);
+    doc.text(`Dátum vystavenia: ${new Date(selectedInvoice.invoiceDate).toLocaleDateString("sk-SK")}`, 14, 37);
+    doc.text(`Splatnosť: ${new Date(selectedInvoice.dueDate).toLocaleDateString("sk-SK")}`, 14, 44);
+    doc.text(`Suma: $${selectedInvoice.total.toFixed(2)}`, 14, 51);
+    doc.text(`Stav: ${getStatusConfig(selectedInvoice.status).label}`, 14, 58);
+
+    // Položky faktúry
+    if (selectedInvoice.items && selectedInvoice.items.length > 0) {
+      doc.text("Položky:", 14, 68);
+      let y = 75;
+      selectedInvoice.items.forEach((item, idx) => {
+        doc.text(`${idx + 1}. ${item.description} | Množstvo: ${item.quantity} | Cena: $${item.price.toFixed(2)}`, 14, y);
+        y += 7;
+      });
+    }
+
+    // Stiahnutie PDF
+    doc.save(`faktura_${selectedInvoice.invoiceNumber}.pdf`);
+
+    setPdfDialogOpen(false);
+    setSelectedInvoice(null);
   };
 
   const handleSaveEdit = async () => {
@@ -227,7 +257,9 @@ const InvoicesWrapper: FC = () => {
       accessorKey: "invoiceDate",
       header: "Dátum",
       enableSorting: true,
-      cell: (info) => <span className="text-muted-foreground">{new Date(info.getValue() as string).toLocaleDateString("sk-SK")}</span>,
+      cell: (info) => (
+        <span className="text-muted-foreground">{new Date(info.getValue() as string).toLocaleDateString("sk-SK")}</span>
+      ),
       sortingFn: (a, b) =>
         new Date(a.getValue<string>("invoiceDate")).getTime() -
         new Date(b.getValue<string>("invoiceDate")).getTime(),
@@ -255,10 +287,12 @@ const InvoicesWrapper: FC = () => {
   ];
 
   const tableData = useMemo(() => {
-    return data?.invoices.map((invoice) => ({
-      ...invoice,
-      id: invoice.invoiceNumber || invoice._id,
-    })) || [];
+    return (
+      data?.invoices.map((invoice) => ({
+        ...invoice,
+        id: invoice.invoiceNumber || invoice._id,
+      })) || []
+    );
   }, [data?.invoices]);
 
   const table = useReactTable<Invoice>({
@@ -420,7 +454,91 @@ const InvoicesWrapper: FC = () => {
         </div>
       </div>
 
-      <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
+      {/* 🔹 VIEW INVOICE DIALOG */}
+      <Dialog open={viewDialogOpen} onOpenChange={(open) => { setViewDialogOpen(open); if (!open) setSelectedInvoice(null); }}>
+        <DialogContent className="sm:max-w-3xl">
+          <DialogHeader>
+            <DialogTitle>Detail faktúry</DialogTitle>
+            <DialogDescription>Podrobné informácie o faktúre</DialogDescription>
+          </DialogHeader>
+
+          {selectedInvoice ? (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Číslo faktúry</p>
+                  <p className="font-medium">{selectedInvoice.invoiceNumber}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Klient</p>
+                  <p className="font-medium">
+                    {typeof selectedInvoice.client === "object"
+                      ? selectedInvoice.client.name
+                      : "Neznámy klient"}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Dátum vystavenia</p>
+                  <p>{new Date(selectedInvoice.invoiceDate).toLocaleDateString("sk-SK")}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Splatnosť</p>
+                  <p>{new Date(selectedInvoice.dueDate).toLocaleDateString("sk-SK")}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Suma</p>
+                  <p className="font-semibold">${selectedInvoice.total.toFixed(2)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Stav</p>
+                  <span
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusConfig(selectedInvoice.status).className
+                      }`}
+                  >
+                    {getStatusConfig(selectedInvoice.status).label}
+                  </span>
+                </div>
+              </div>
+
+              {selectedInvoice.items && selectedInvoice.items.length > 0 && (
+                <div>
+                  <h4 className="font-semibold mt-4 mb-2">Položky</h4>
+                  <table className="w-full text-sm border border-border rounded-md overflow-hidden">
+                    <thead className="bg-muted/50">
+                      <tr>
+                        <th className="text-left p-2">Popis</th>
+                        <th className="text-left p-2">Množstvo</th>
+                        <th className="text-left p-2">Cena</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {selectedInvoice.items.map((item, idx) => (
+                        <tr key={idx} className="border-t border-border">
+                          <td className="p-2">{item.description}</td>
+                          <td className="p-2">{item.quantity}</td>
+                          <td className="p-2">${item.price.toFixed(2)}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+
+              <div className="flex justify-end gap-2 mt-4">
+                <Button variant="outline" onClick={() => setViewDialogOpen(false)}>Zavrieť</Button>
+                <Button onClick={() => { setViewDialogOpen(false); setEditDialogOpen(true); }}>
+                  Upraviť
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <p>Načítavam údaje...</p>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* 🔹 EDIT DIALOG */}
+      <Dialog open={editDialogOpen} onOpenChange={(open) => { setEditDialogOpen(open); if (!open) setSelectedInvoice(null); }}>
         <DialogContent className="sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle>Upraviť faktúru</DialogTitle>
@@ -454,6 +572,45 @@ const InvoicesWrapper: FC = () => {
           <DialogFooter className="flex gap-2">
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>Zrušiť</Button>
             <Button onClick={handleSaveEdit}>Uložiť zmeny</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 🔹 DELETE DIALOG */}
+      <Dialog open={deleteDialogOpen} onOpenChange={(open) => { setDeleteDialogOpen(open); if (!open) setSelectedInvoice(null); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Odstrániť faktúru</DialogTitle>
+            <DialogDescription>Naozaj chcete odstrániť túto faktúru? Táto akcia je nevratná.</DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground">{selectedInvoice ? `Faktúra ${selectedInvoice.invoiceNumber} — ${typeof selectedInvoice.client === 'object' ? selectedInvoice.client.name : ''}` : 'Žiadna faktúra vybraná.'}</p>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setDeleteDialogOpen(false)}>Zrušiť</Button>
+            <Button className="bg-destructive text-white" onClick={confirmDelete}>Odstrániť</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* 🔹 PDF DIALOG */}
+      <Dialog open={pdfDialogOpen} onOpenChange={(open) => { setPdfDialogOpen(open); if (!open) setSelectedInvoice(null); }}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Generovať PDF</DialogTitle>
+            <DialogDescription>Vytvoriť a stiahnuť PDF pre túto faktúru.</DialogDescription>
+          </DialogHeader>
+
+          <div className="py-4 space-y-3">
+            <p className="text-sm text-muted-foreground">{selectedInvoice ? `Faktúra ${selectedInvoice.invoiceNumber}` : 'Žiadna faktúra vybraná.'}</p>
+            <p className="text-sm">Kliknite na Generovať pre vytvorenie a stiahnutie PDF.</p>
+          </div>
+
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => setPdfDialogOpen(false)}>Zrušiť</Button>
+            <Button onClick={handleDownloadPDF}>Generovať</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
