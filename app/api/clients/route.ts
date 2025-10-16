@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Client from "@/models/Client";
 import connectToDB from "@/lib/auth/mongoose";
 import { IInvoice } from "@/models/Invoice";
+import { CustomError } from "@/types/ErrorType";
 
 interface ClientWithInvoices {
   _id: string;
@@ -72,7 +73,11 @@ export async function POST(req: NextRequest) {
   try {
     const newClient = await Client.create({ name, email, address });
     return NextResponse.json(newClient, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      const customErr: CustomError = { message: err.message };
+      return NextResponse.json({ error: customErr.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 400 });
   }
 }
