@@ -1,11 +1,12 @@
 "use client";
 
 import { useMemo } from "react";
-import { Folder, FolderOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFolders } from "@/hooks/folder/useFolders";
 import { Spinner } from "../ui/spinner";
+import type { Folder as FolderType } from "@/hooks/folder/useCreateFolder"; // typ
+import { Folder as FolderIcon, FolderOpen } from "lucide-react"; // ikony
 
 interface FolderListProps {
   selectedFolder: string | null;
@@ -22,9 +23,9 @@ export const FolderList = ({
     return folders || [];
   }, [folders]);
 
-  const renderFolderButton = (folder: any) => {
+  const renderFolderButton = (folder: FolderType) => {
     const isSelected = selectedFolder === folder._id;
-    const Icon = isSelected ? FolderOpen : Folder;
+    const Icon = isSelected ? FolderOpen : FolderIcon;
 
     return (
       <Button
@@ -48,6 +49,7 @@ export const FolderList = ({
         <Spinner />
       </p>
     );
+
   if (isError)
     return (
       <p className="text-center py-4 text-red-500">

@@ -1,12 +1,61 @@
 import jsPDF from "jspdf";
-import autoTable from "jspdf-autotable";
+import autoTable, { UserOptions } from "jspdf-autotable";
 
-export const exportInvoiceToPDF = (invoice: any) => {
-  const doc = new jsPDF();
+// Typy pre faktúru
+export interface InvoiceItem {
+  description: string;
+  quantity: number;
+  rate: number;
+  amount: number;
+}
+
+export interface InvoiceClient {
+  name: string;
+  email: string;
+  address?: string;
+}
+
+export interface Invoice {
+  id: string;
+  date: string;
+  dueDate: string;
+  client: InvoiceClient;
+  items: InvoiceItem[];
+  total: number;
+  notes?: string;
+}
+
+// Typy pre dashboard
+export interface DashboardInvoice {
+  id: string;
+  client: string;
+  amount: number;
+  status: string;
+  date: string;
+}
+
+export interface DashboardData {
+  totalRevenue: number;
+  pending: number;
+  paidThisMonth: number;
+  totalInvoices: number;
+  recentInvoices: DashboardInvoice[];
+}
+
+// Rozšírenie typu jsPDF o lastAutoTable
+interface jsPDFWithAutoTable extends jsPDF {
+  lastAutoTable?: {
+    finalY?: number;
+  };
+}
+
+// Export faktúry do PDF
+export const exportInvoiceToPDF = (invoice: Invoice): void => {
+  const doc = new jsPDF() as jsPDFWithAutoTable;
 
   // Header
   doc.setFontSize(24);
-  doc.setTextColor(79, 70, 229); // primary color
+  doc.setTextColor(79, 70, 229);
   doc.text("FAKTÚRA", 20, 20);
 
   // Invoice details
@@ -22,13 +71,15 @@ export const exportInvoiceToPDF = (invoice: any) => {
   doc.setFontSize(10);
   doc.text(invoice.client.name, 20, 72);
   doc.text(invoice.client.email, 20, 79);
-  doc.text(invoice.client.address, 20, 86);
+  if (invoice.client.address) {
+    doc.text(invoice.client.address, 20, 86);
+  }
 
   // Items table
   autoTable(doc, {
     startY: 100,
     head: [["Popis", "Množstvo", "Cena", "Suma"]],
-    body: invoice.items.map((item: any) => [
+    body: invoice.items.map((item) => [
       item.description,
       item.quantity,
       `€${item.rate.toFixed(2)}`,
@@ -36,10 +87,10 @@ export const exportInvoiceToPDF = (invoice: any) => {
     ]),
     theme: "grid",
     headStyles: { fillColor: [79, 70, 229] },
-  });
+  } as UserOptions);
 
   // Total
-  const finalY = (doc as any).lastAutoTable.finalY || 100;
+  const finalY = doc.lastAutoTable?.finalY ?? 100;
   doc.setFontSize(14);
   doc.text(`Celkom: €${invoice.total.toFixed(2)}`, 20, finalY + 15);
 
@@ -53,8 +104,9 @@ export const exportInvoiceToPDF = (invoice: any) => {
   doc.save(`faktura-${invoice.id}.pdf`);
 };
 
-export const exportDashboardToPDF = (data: any) => {
-  const doc = new jsPDF();
+// Export dashboard do PDF
+export const exportDashboardToPDF = (data: DashboardData): void => {
+  const doc = new jsPDF() as jsPDFWithAutoTable;
 
   // Header
   doc.setFontSize(20);
@@ -79,7 +131,7 @@ export const exportDashboardToPDF = (data: any) => {
   autoTable(doc, {
     startY: 85,
     head: [["Číslo", "Klient", "Suma", "Stav", "Dátum"]],
-    body: data.recentInvoices.map((inv: any) => [
+    body: data.recentInvoices.map((inv) => [
       inv.id,
       inv.client,
       inv.amount,
@@ -88,7 +140,7 @@ export const exportDashboardToPDF = (data: any) => {
     ]),
     theme: "grid",
     headStyles: { fillColor: [79, 70, 229] },
-  });
+  } as UserOptions);
 
   doc.save(`dashboard-report-${new Date().toISOString().split("T")[0]}.pdf`);
 };

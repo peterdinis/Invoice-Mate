@@ -3,13 +3,7 @@
 import { FC, Suspense } from "react";
 import DashboardNavigation from "./DashboardNavigation";
 import { Button } from "../ui/button";
-import {
-  Clock,
-  DollarSign,
-  FileText,
-  Plus,
-  TrendingUp,
-} from "lucide-react";
+import { Clock, DollarSign, FileText, Plus, TrendingUp } from "lucide-react";
 import { DashboardStatCard } from "./DashboardStatCard";
 import { RevenueChart } from "./RevenueChart";
 import { RecentInvoices } from "../invoices/RecentInvoices";
@@ -21,7 +15,7 @@ import { useInvoiceStats } from "@/hooks/invoices/useInvoicesStats";
 const DashboardWrapper: FC = () => {
   const { data: stats, isLoading, isError } = useInvoiceStats();
 
-  console.log("S", stats)
+  console.log("S", stats);
 
   if (isLoading) {
     return (

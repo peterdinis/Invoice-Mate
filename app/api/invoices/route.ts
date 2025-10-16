@@ -62,7 +62,10 @@ export async function POST(req: NextRequest) {
 
     const folderExists = await Folder.findById(body.folder);
     if (!folderExists) {
-      return NextResponse.json({ message: "Folder not found" }, { status: 404 });
+      return NextResponse.json(
+        { message: "Folder not found" },
+        { status: 404 },
+      );
     }
 
     const newInvoice = await Invoice.create(body);

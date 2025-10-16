@@ -14,10 +14,10 @@ export async function GET() {
 
     return NextResponse.json(invoices);
   } catch (err: unknown) {
-      if (err instanceof Error) {
-        const customErr: CustomError = { message: err.message };
-        return NextResponse.json({ error: customErr.message }, { status: 400 });
-      }
-      return NextResponse.json({ error: "Unknown error" }, { status: 400 });
+    if (err instanceof Error) {
+      const customErr: CustomError = { message: err.message };
+      return NextResponse.json({ error: customErr.message }, { status: 400 });
     }
+    return NextResponse.json({ error: "Unknown error" }, { status: 400 });
+  }
 }

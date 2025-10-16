@@ -2,6 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 
+export interface ClientInvoiceSummary {
+  _id: string;
+  number: string;
+  total: number;
+  status: "paid" | "pending" | "overdue" | string;
+  issueDate: string;
+  dueDate: string;
+}
+
 export interface Client {
   _id: string;
   name: string;
@@ -9,7 +18,7 @@ export interface Client {
   address?: string;
   createdAt: string;
   updatedAt: string;
-  invoices: any[];
+  invoices: ClientInvoiceSummary[];
 }
 
 interface ClientsResponse {
@@ -39,16 +48,13 @@ async function fetchClients(
   });
 
   if (!res.ok) {
-    const errorData = await res.json().catch(() => ({}));
+    const errorData: { error?: string } = await res.json().catch(() => ({}));
     throw new Error(errorData.error || "Nepodarilo sa načítať klientov");
   }
 
   return res.json();
 }
 
-/**
- * Hook to fetch paginated + searchable clients
- */
 export function useClients({
   page = 1,
   limit = 10,
@@ -61,6 +67,6 @@ export function useClients({
   return useQuery({
     queryKey: ["clients", { page, limit, searchTerm }],
     queryFn: () => fetchClients(page, limit, searchTerm),
-    staleTime: 30_000, // optional: 30s cache freshness
+    staleTime: 30_000,
   });
 }

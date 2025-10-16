@@ -259,7 +259,7 @@ const InvoicesWrapper: FC = () => {
     }
   };
 
-  const columns: ColumnDef<Invoice, any>[] = [
+  const columns: ColumnDef<Invoice>[] = [
     {
       accessorKey: "invoiceNumber",
       header: "Číslo",
@@ -272,7 +272,7 @@ const InvoicesWrapper: FC = () => {
       accessorKey: "client",
       header: "Klient",
       cell: (info) => {
-        const client = info.getValue();
+        const client = info.getValue() as Invoice["client"];
         const clientName =
           typeof client === "object" ? client.name : "Unknown Client";
         return <span>{clientName}</span>;
@@ -293,7 +293,7 @@ const InvoicesWrapper: FC = () => {
       header: "Stav",
       enableSorting: true,
       cell: (info) => {
-        const status = info.getValue() as string;
+        const status = info.getValue() as Invoice["status"];
         const cfg = getStatusConfig(status);
         return (
           <span

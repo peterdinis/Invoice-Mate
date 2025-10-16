@@ -26,11 +26,11 @@ export async function GET(req: NextRequest) {
 
   const filter = searchTerm
     ? {
-      $or: [
-        { name: { $regex: searchTerm, $options: "i" } },
-        { email: { $regex: searchTerm, $options: "i" } },
-      ],
-    }
+        $or: [
+          { name: { $regex: searchTerm, $options: "i" } },
+          { email: { $regex: searchTerm, $options: "i" } },
+        ],
+      }
     : {};
 
   const clientsWithInvoiceCount: ClientWithInvoices[] = await Client.aggregate([
