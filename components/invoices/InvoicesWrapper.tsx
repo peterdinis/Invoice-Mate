@@ -58,6 +58,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import autoTable from "jspdf-autotable";
 
 interface Invoice {
   _id: string;
@@ -178,43 +179,64 @@ const InvoicesWrapper: FC = () => {
 
     const doc = new jsPDF();
 
-    doc.setFontSize(18);
-    doc.text(`Faktúra: ${selectedInvoice.invoiceNumber}`, 14, 20);
+    // 🔹 Hlavička
+    doc.setFontSize(20);
+    doc.text("FAKTÚRA", 105, 20, { align: "center" });
 
     doc.setFontSize(12);
+    doc.text(`Číslo faktúry: ${selectedInvoice.invoiceNumber}`, 14, 35);
     doc.text(
       `Klient: ${typeof selectedInvoice.client === "object" ? selectedInvoice.client.name : "Neznámy klient"}`,
       14,
-      30,
+      42,
+    );
+    doc.text(
+      `Email: ${typeof selectedInvoice.client === "object" ? selectedInvoice.client.email : "-"}`,
+      14,
+      49,
     );
     doc.text(
       `Dátum vystavenia: ${new Date(selectedInvoice.invoiceDate).toLocaleDateString("sk-SK")}`,
       14,
-      37,
+      56,
     );
     doc.text(
       `Splatnosť: ${new Date(selectedInvoice.dueDate).toLocaleDateString("sk-SK")}`,
       14,
-      44,
+      63,
     );
-    doc.text(`Suma: $${selectedInvoice.total.toFixed(2)}`, 14, 51);
-    doc.text(`Stav: ${getStatusConfig(selectedInvoice.status).label}`, 14, 58);
+    doc.text(`Stav: ${getStatusConfig(selectedInvoice.status).label}`, 14, 70);
 
-    // Položky faktúry
+    // 🔹 Položky faktúry tabuľka
     if (selectedInvoice.items && selectedInvoice.items.length > 0) {
-      doc.text("Položky:", 14, 68);
-      let y = 75;
-      selectedInvoice.items.forEach((item, idx) => {
-        doc.text(
-          `${idx + 1}. ${item.description} | Množstvo: ${item.quantity} | Cena: $${item.price.toFixed(2)}`,
-          14,
-          y,
-        );
-        y += 7;
+      const tableData = selectedInvoice.items.map((item) => [
+        item.description,
+        item.quantity,
+        `$${item.price.toFixed(2)}`,
+        `$${(item.quantity * item.price).toFixed(2)}`,
+      ]);
+
+      autoTable(doc, {
+        startY: 80,
+        head: [["Popis", "Množstvo", "Cena", "Celkom"]],
+        body: tableData,
+        theme: "grid",
+        headStyles: { fillColor: [41, 128, 185], textColor: 255 },
+        foot: [
+          [
+            "",
+            "",
+            "Celkom",
+            `$${selectedInvoice.items.reduce((sum, i) => sum + i.price * i.quantity, 0).toFixed(2)}`,
+          ],
+        ],
+        footStyles: { fillColor: [41, 128, 185], textColor: 255 },
       });
     }
 
-    // Stiahnutie PDF
+    doc.setFontSize(10);
+    doc.text("Ďakujeme za spoluprácu!", 14, doc.internal.pageSize.height - 20);
+
     doc.save(`faktura_${selectedInvoice.invoiceNumber}.pdf`);
 
     setPdfDialogOpen(false);
