@@ -54,8 +54,20 @@ export const FolderDialog = ({ onFolderCreated }: FolderDialogProps) => {
         reset();
         setOpen(false);
       },
-      onError: (error: any) => {
-        toast.error(error.message || "Nepodarilo sa vytvoriť priečinok");
+      onError: (error: unknown) => {
+        let message = "Nepodarilo sa vytvoriť priečinok";
+
+        if (error instanceof Error) {
+          message = error.message;
+        } else if (
+          typeof error === "object" &&
+          error !== null &&
+          "message" in error
+        ) {
+          message = (error as { message: string }).message;
+        }
+
+        toast.error(message);
       },
     });
   };

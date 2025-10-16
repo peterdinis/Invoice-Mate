@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Client from "@/models/Client";
 import connectToDB from "@/lib/auth/mongoose";
+import { IInvoice } from "@/models/Invoice";
+import { CustomError } from "@/types/ErrorType";
 
 interface ClientWithInvoices {
   _id: string;
@@ -9,7 +11,7 @@ interface ClientWithInvoices {
   address?: string;
   createdAt: Date;
   updatedAt: Date;
-  invoices: any[];
+  invoices: IInvoice[];
   invoiceCount: number;
 }
 
@@ -19,10 +21,9 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const page = parseInt(searchParams.get("page") || "1", 10);
   const limit = parseInt(searchParams.get("limit") || "10", 10);
-  const searchTerm = searchParams.get("search") || ""; // ⚠️ Opravený parameter
+  const searchTerm = searchParams.get("search") || "";
   const skip = (page - 1) * limit;
 
-  // Filter pre vyhľadávanie podľa mena alebo emailu
   const filter = searchTerm
     ? {
         $or: [
@@ -32,12 +33,11 @@ export async function GET(req: NextRequest) {
       }
     : {};
 
-  // Aggregácia pre pripojenie faktúr
   const clientsWithInvoiceCount: ClientWithInvoices[] = await Client.aggregate([
     { $match: filter },
     {
       $lookup: {
-        from: "invoices", // MongoDB collection name
+        from: "invoices",
         localField: "_id",
         foreignField: "client",
         as: "invoices",
@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
     },
     {
       $addFields: {
-        invoiceCount: { $size: "$invoices" }, // počet faktúr
+        invoiceCount: { $size: "$invoices" },
       },
     },
     { $skip: skip },
@@ -73,7 +73,11 @@ export async function POST(req: NextRequest) {
   try {
     const newClient = await Client.create({ name, email, address });
     return NextResponse.json(newClient, { status: 201 });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message }, { status: 400 });
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      const customErr: CustomError = { message: err.message };
+      return NextResponse.json({ error: customErr.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 400 });
   }
 }

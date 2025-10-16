@@ -15,6 +15,15 @@ import {
   EmptyContent,
 } from "../ui/empty";
 
+export interface RecentInvoice {
+  _id: string;
+  invoiceNumber: string;
+  clientName: string;
+  amount: string | number;
+  status: "paid" | "pending" | "overdue" | string;
+  createdAt: string;
+}
+
 const statusConfig = {
   paid: {
     label: "Zaplatené",
@@ -90,7 +99,7 @@ export const RecentInvoices = () => {
       </div>
 
       <div className="space-y-4">
-        {invoices.map((invoice: any) => (
+        {invoices.map((invoice: RecentInvoice) => (
           <div
             key={invoice._id}
             className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-muted/50 transition-colors"

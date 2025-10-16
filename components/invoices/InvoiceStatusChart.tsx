@@ -8,7 +8,6 @@ import {
   Cell,
   ResponsiveContainer,
   Tooltip,
-  PieLabelRenderProps,
 } from "recharts";
 import { Badge } from "../ui/badge";
 import { Spinner } from "../ui/spinner";
@@ -25,33 +24,7 @@ export const InvoiceStatusChart = () => {
 
   const chartData = data?.data || fallbackData;
 
-  const CustomLabel = ({
-    cx,
-    cy,
-    midAngle,
-    innerRadius,
-    outerRadius,
-    percentage,
-  }: any) => {
-    const RADIAN = Math.PI / 180;
-    const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
-    const x = cx + radius * Math.cos(-midAngle * RADIAN);
-    const y = cy + radius * Math.sin(-midAngle * RADIAN);
-
-    return (
-      <text
-        x={x}
-        y={y}
-        fill="white"
-        textAnchor={x > cx ? "start" : "end"}
-        dominantBaseline="central"
-        fontSize={12}
-        fontWeight="bold"
-      >
-        {`${percentage}%`}
-      </text>
-    );
-  };
+  
 
   if (isLoading) {
     return (
@@ -100,7 +73,6 @@ export const InvoiceStatusChart = () => {
               cx="50%"
               cy="50%"
               labelLine={false}
-              label={CustomLabel}
               outerRadius={120}
               innerRadius={60}
               fill="#8884d8"

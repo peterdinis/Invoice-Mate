@@ -2,6 +2,7 @@ import connectToDB from "@/lib/auth/mongoose";
 import Client from "@/models/Client";
 import { NextRequest, NextResponse } from "next/server";
 import mongoose from "mongoose";
+import { CustomError } from "@/types/ErrorType";
 
 export async function PATCH(
   req: NextRequest,
@@ -43,11 +44,11 @@ export async function PATCH(
     ).populate("invoices"); // ak chceš mať invoices priamo vo výsledku
 
     return NextResponse.json(updatedClient, { status: 200 });
-  } catch (error: any) {
-    console.error("Error updating client:", error);
-    return NextResponse.json(
-      { error: "Something went wrong" },
-      { status: 500 },
-    );
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      const customErr: CustomError = { message: err.message };
+      return NextResponse.json({ error: customErr.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 400 });
   }
 }

@@ -1,7 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
-import Invoice from "@/models/Invoice";
+import Invoice, { IInvoice } from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 import Folder from "@/models/Folder";
+
+interface InvoiceFilter {
+  folder?: string | null;
+  $or?: Array<
+    | { invoiceNumber: { $regex: string; $options: "i" } }
+    | { "client.name": { $regex: string; $options: "i" } }
+    | { "client.email": { $regex: string; $options: "i" } }
+  >;
+}
 
 export async function GET(req: NextRequest) {
   await connectToDB();
@@ -13,10 +22,10 @@ export async function GET(req: NextRequest) {
   const searchTerm = searchParams.get("search") || "";
   const skip = (page - 1) * limit;
 
-  const filter: any = {};
+  const filter: InvoiceFilter = {};
 
   if (folderId) {
-    filter.folder = folderId; // filter podľa priečinka
+    filter.folder = folderId;
   }
 
   if (searchTerm) {
@@ -46,10 +55,10 @@ export async function GET(req: NextRequest) {
   });
 }
 
-export async function POST(req: Request) {
+export async function POST(req: NextRequest) {
   try {
     await connectToDB();
-    const body = await req.json();
+    const body: Partial<IInvoice> = await req.json();
 
     const folderExists = await Folder.findById(body.folder);
     if (!folderExists) {
@@ -61,11 +70,11 @@ export async function POST(req: Request) {
 
     const newInvoice = await Invoice.create(body);
     return NextResponse.json(newInvoice, { status: 201 });
-  } catch (error) {
-    console.error(error);
-    return NextResponse.json(
-      { message: "Failed to create invoice" },
-      { status: 500 },
-    );
+  } catch (err: unknown) {
+    console.error(err);
+    if (err instanceof Error) {
+      return NextResponse.json({ message: err.message }, { status: 500 });
+    }
+    return NextResponse.json({ message: "Unknown error" }, { status: 500 });
   }
 }

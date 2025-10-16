@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
+import { CustomError } from "@/types/ErrorType";
 
 export async function GET(request: NextRequest) {
   try {
@@ -58,10 +59,11 @@ export async function GET(request: NextRequest) {
     }
 
     return NextResponse.json(monthsData);
-  } catch (error: any) {
-    return NextResponse.json(
-      { error: "Failed to fetch monthly revenue", message: error.message },
-      { status: 500 },
-    );
+  } catch (err: unknown) {
+    if (err instanceof Error) {
+      const customErr: CustomError = { message: err.message };
+      return NextResponse.json({ error: customErr.message }, { status: 400 });
+    }
+    return NextResponse.json({ error: "Unknown error" }, { status: 400 });
   }
 }

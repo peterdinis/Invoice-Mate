@@ -100,10 +100,23 @@ const ClientsWrapper: FC = () => {
           setSelectedClient(null);
           setEditedClient(null);
         },
-        onError: (error: any) => {
+        onError: (error: unknown) => {
+          let message = "Nepodarilo sa upraviť klienta";
+
+          if (error instanceof Error) {
+            message = error.message;
+          } else if (
+            typeof error === "object" &&
+            error !== null &&
+            "message" in error
+          ) {
+            // Pre prípad custom error objektov
+            message = (error as { message: string }).message;
+          }
+
           toast({
             title: "Chyba",
-            description: error?.message || "Nepodarilo sa upraviť klienta",
+            description: message,
             duration: 3000,
             className: "bg-red-600 text-white font-bold text-base",
           });
@@ -113,7 +126,6 @@ const ClientsWrapper: FC = () => {
   };
 
   const confirmDelete = () => {
-    // Tu pridaj logiku pre odstránenie klienta
     toast({
       title: "Klient bol odstránený",
       description: `Klient ${selectedClient?.name} bol úspešne odstránený.`,
@@ -189,7 +201,7 @@ const ClientsWrapper: FC = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {clients.map((client, index) => (
+                  {clients.map((client: any, index) => (
                     <Card
                       key={client._id}
                       className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"

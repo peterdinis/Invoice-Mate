@@ -71,11 +71,14 @@ export const ClientDialog = ({
       toast.success("Klient bol úspešne vytvorený 🎉");
       setOpen(false);
       reset();
-    } catch (err: any) {
-      toast.error(err.message || "Nepodarilo sa vytvoriť klienta");
+    } catch (err: unknown) {
+      if (err instanceof Error) {
+        toast.error(err.message);
+      } else {
+        toast.error("Nepodarilo sa vytvoriť klienta");
+      }
     }
   };
-
   return (
     <Dialog
       open={open}
