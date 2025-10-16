@@ -201,7 +201,7 @@ const ClientsWrapper: FC = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {clients.map((client, index) => (
+                  {clients.map((client: any, index) => (
                     <Card
                       key={client._id}
                       className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
