@@ -6,7 +6,6 @@ import { Badge } from "@/components/ui/badge";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Download, Edit, Mail } from "lucide-react";
 import { toast } from "sonner";
-import Link from "next/link";
 import { exportInvoiceToPDF } from "@/lib/pdfs/pdfExport";
 import { NotesSection } from "../notes/NotesSection";
 import CustomLink from "../shared/CustomLink";

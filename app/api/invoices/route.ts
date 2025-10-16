@@ -2,15 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import Invoice, { IInvoice } from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 import Folder from "@/models/Folder";
-
-interface InvoiceFilter {
-  folder?: string | null;
-  $or?: Array<
-    | { invoiceNumber: { $regex: string; $options: "i" } }
-    | { "client.name": { $regex: string; $options: "i" } }
-    | { "client.email": { $regex: string; $options: "i" } }
-  >;
-}
+import { InvoiceFilter } from "@/types/ClientTypes";
 
 export async function GET(req: NextRequest) {
   await connectToDB();

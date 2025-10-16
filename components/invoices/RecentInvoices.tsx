@@ -14,30 +14,7 @@ import {
   EmptyDescription,
   EmptyContent,
 } from "../ui/empty";
-
-export interface RecentInvoice {
-  _id: string;
-  invoiceNumber: string;
-  clientName: string;
-  amount: string | number;
-  status: "paid" | "pending" | "overdue" | string;
-  createdAt: string;
-}
-
-const statusConfig = {
-  paid: {
-    label: "Zaplatené",
-    className: "bg-success/10 text-success hover:bg-success/20",
-  },
-  pending: {
-    label: "Čakajúce",
-    className: "bg-warning/10 text-warning hover:bg-warning/20",
-  },
-  overdue: {
-    label: "Po splatnosti",
-    className: "bg-destructive/10 text-destructive hover:bg-destructive/20",
-  },
-};
+import { RecentInvoice } from "@/types/InvoiceTypes";
 
 export const RecentInvoices = () => {
   const { data: invoices, isLoading, isError } = useRecentInvoices();

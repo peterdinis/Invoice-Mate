@@ -59,29 +59,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import autoTable from "jspdf-autotable";
-
-interface Invoice {
-  _id: string;
-  invoiceNumber: string;
-  client:
-    | {
-        _id: string;
-        name: string;
-        email: string;
-      }
-    | string;
-  total: number;
-  status: "paid" | "pending" | "overdue" | "draft";
-  invoiceDate: string;
-  dueDate: string;
-  createdAt: string;
-  updatedAt: string;
-  items?: Array<{
-    description: string;
-    quantity: number;
-    price: number;
-  }>;
-}
+import { Invoice } from "@/types/InvoiceTypes";
 
 const statusConfig = {
   paid: {

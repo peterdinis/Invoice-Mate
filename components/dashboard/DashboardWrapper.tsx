@@ -15,8 +15,6 @@ import { useInvoiceStats } from "@/hooks/invoices/useInvoicesStats";
 const DashboardWrapper: FC = () => {
   const { data: stats, isLoading, isError } = useInvoiceStats();
 
-  console.log("S", stats);
-
   if (isLoading) {
     return (
       <Suspense fallback={<Spinner />}>
