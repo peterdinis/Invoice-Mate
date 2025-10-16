@@ -12,8 +12,7 @@ export async function GET(request: NextRequest) {
 
     const now = new Date();
     const monthsData = [];
-
-    // Získaj dáta od aktuálneho mesiaca do budúcnosti
+    
     for (let i = 0; i < months; i++) {
       const monthDate = new Date(now.getFullYear(), now.getMonth() + i, 1);
       const nextMonth = new Date(now.getFullYear(), now.getMonth() + i + 1, 1);
@@ -36,7 +35,6 @@ export async function GET(request: NextRequest) {
         },
       ]);
 
-      // Formátuj názov mesiaca
       const monthNames = [
         "Jan",
         "Feb",

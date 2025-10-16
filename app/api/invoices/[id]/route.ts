@@ -14,7 +14,6 @@ export async function PATCH(
     const body = await req.json();
     const { status } = body;
 
-    // Validácia statusu
     const validStatuses = ["draft", "pending", "paid", "overdue"];
     if (!validStatuses.includes(status)) {
       return NextResponse.json(
@@ -22,8 +21,7 @@ export async function PATCH(
         { status: 400 },
       );
     }
-
-    // Nájdite a aktualizujte faktúru
+    
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       invoiceId,
       { status },

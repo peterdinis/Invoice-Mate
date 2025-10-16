@@ -25,13 +25,11 @@ export async function GET(request: NextRequest) {
       lastMonthInvoices,
       paidInvoices,
     ] = await Promise.all([
-      // Total revenue (all paid invoices)
       Invoice.aggregate([
         { $match: { status: "paid" } },
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]),
 
-      // This month revenue
       Invoice.aggregate([
         {
           $match: {
@@ -42,7 +40,6 @@ export async function GET(request: NextRequest) {
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]),
 
-      // Last month revenue
       Invoice.aggregate([
         {
           $match: {
@@ -53,20 +50,16 @@ export async function GET(request: NextRequest) {
         { $group: { _id: null, total: { $sum: "$total" } } },
       ]),
 
-      // Total invoices
       Invoice.countDocuments(),
 
-      // This month invoices
       Invoice.countDocuments({
         invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
       }),
 
-      // Last month invoices
       Invoice.countDocuments({
         invoiceDate: { $gte: firstDayOfLastMonth, $lt: firstDayOfMonth },
       }),
-
-      // Paid invoices this month
+      
       Invoice.countDocuments({
         status: "paid",
         invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
@@ -77,7 +70,6 @@ export async function GET(request: NextRequest) {
     const thisMonthAmount = thisMonthRevenue[0]?.total || 0;
     const lastMonthAmount = lastMonthRevenue[0]?.total || 0;
 
-    // Calculate percentage changes
     const revenueChange =
       lastMonthAmount > 0
         ? ((thisMonthAmount - lastMonthAmount) / lastMonthAmount) * 100

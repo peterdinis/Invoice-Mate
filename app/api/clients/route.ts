@@ -1,19 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import Client from "@/models/Client";
 import connectToDB from "@/lib/auth/mongoose";
-import { IInvoice } from "@/models/Invoice";
 import { CustomError } from "@/types/ErrorType";
-
-interface ClientWithInvoices {
-  _id: string;
-  name: string;
-  email: string;
-  address?: string;
-  createdAt: Date;
-  updatedAt: Date;
-  invoices: IInvoice[];
-  invoiceCount: number;
-}
+import { ClientWithInvoices } from "@/types/ClientTypes";
 
 export async function GET(req: NextRequest) {
   await connectToDB();
