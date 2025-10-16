@@ -43,22 +43,15 @@ const ModeToggle: FC = () => {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="icon">
+        <Button variant="outline" size="icon" aria-label="Toggle theme">
           <Sun className="h-5 w-5 scale-100 rotate-0 transition-all dark:scale-0 dark:-rotate-90" />
           <Moon className="absolute h-5 w-5 scale-0 rotate-90 transition-all dark:scale-100 dark:rotate-0" />
-          <span className="sr-only">Toggle theme</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuItem onClick={() => setTheme("light")}>
-          Light
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("dark")}>
-          Dark
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={() => setTheme("system")}>
-          System
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("light")}>Light</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("dark")}>Dark</DropdownMenuItem>
+        <DropdownMenuItem onClick={() => setTheme("system")}>System</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -69,19 +62,13 @@ const AuthWrapper: FC = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<FormValues>({
+  const { register, handleSubmit, formState: { errors } } = useForm<FormValues>({
     resolver: zodResolver(schema),
   });
 
   const mutation = useMutation({
     mutationFn: (data: FormValues) => {
-      const endpoint = isSignUp
-        ? "/api/auth/sign-up/email"
-        : "/api/auth/sign-in/email";
+      const endpoint = isSignUp ? "/api/auth/sign-up/email" : "/api/auth/sign-in/email";
       return authRequest(endpoint, data);
     },
     onSuccess: () => router.push("/dashboard"),
@@ -91,7 +78,6 @@ const AuthWrapper: FC = () => {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4 relative">
-      {/* Mode toggle vpravo hore */}
       <div className="absolute top-4 right-4">
         <ModeToggle />
       </div>
@@ -114,52 +100,43 @@ const AuthWrapper: FC = () => {
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           <div>
-            <label
-              htmlFor="email"
-              className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2"
-            >
+            <label htmlFor="email" className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2">
               Email Address
             </label>
             <input
               id="email"
               type="email"
               {...register("email")}
-              className={`w-full px-4 py-3 border ${errors.email ? "border-red-400 focus:ring-red-400" : "border-slate-300 focus:ring-slate-900"} rounded-lg focus:ring-2 focus:border-transparent transition-all`}
+              className={`w-full px-4 py-3 border ${
+                errors.email ? "border-red-400 focus:ring-red-400" : "border-slate-300 focus:ring-slate-900"
+              } rounded-lg focus:ring-2 focus:border-transparent transition-all`}
               placeholder="you@example.com"
             />
-            {errors.email && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.email.message}
-              </p>
-            )}
+            {errors.email && <p className="text-sm text-red-600 mt-1">{errors.email.message}</p>}
           </div>
 
           <div className="relative">
-            <label
-              htmlFor="password"
-              className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2"
-            >
+            <label htmlFor="password" className="block text-sm font-medium dark:text-sky-100 text-slate-700 mb-2">
               Password
             </label>
             <input
               id="password"
               type={showPassword ? "text" : "password"}
               {...register("password")}
-              className={`w-full px-4 py-3 border ${errors.password ? "border-red-400 focus:ring-red-400" : "border-slate-300 focus:ring-slate-900"} rounded-lg focus:ring-2 focus:border-transparent transition-all pr-10`}
+              className={`w-full px-4 py-3 border ${
+                errors.password ? "border-red-400 focus:ring-red-400" : "border-slate-300 focus:ring-slate-900"
+              } rounded-lg focus:ring-2 focus:border-transparent transition-all pr-10`}
               placeholder="••••••••"
             />
             <button
               type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
             >
               {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
             </button>
-            {errors.password && (
-              <p className="text-sm text-red-600 mt-1">
-                {errors.password.message}
-              </p>
-            )}
+            {errors.password && <p className="text-sm text-red-600 mt-1">{errors.password.message}</p>}
           </div>
 
           {mutation.isError && (
@@ -173,22 +150,17 @@ const AuthWrapper: FC = () => {
             disabled={mutation.isPending}
             className="w-full bg-slate-900 text-white py-3 rounded-lg font-medium hover:bg-slate-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {mutation.isPending
-              ? "Please wait..."
-              : isSignUp
-                ? "Sign Up"
-                : "Sign In"}
+            {mutation.isPending ? "Please wait..." : isSignUp ? "Sign Up" : "Sign In"}
           </button>
         </form>
 
         <div className="mt-6 text-center">
           <button
+            type="button"
             onClick={() => setIsSignUp(!isSignUp)}
             className="text-slate-600 dark:text-sky-100 hover:text-slate-900 text-sm transition-colors"
           >
-            {isSignUp
-              ? "Already have an account? Sign in"
-              : "Don't have an account? Sign up"}
+            {isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up"}
           </button>
         </div>
       </div>
