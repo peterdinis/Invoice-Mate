@@ -47,18 +47,26 @@ export const FolderDialog = ({ onFolderCreated }: FolderDialogProps) => {
   });
 
   const onSubmit = (data: FolderFormValues) => {
-    createFolder(data, {
-      onSuccess: (newFolder) => {
-        toast.success("Priečinok bol vytvorený");
-        onFolderCreated?.(newFolder.name);
-        reset();
-        setOpen(false);
-      },
-      onError: (error: any) => {
-        toast.error(error.message || "Nepodarilo sa vytvoriť priečinok");
-      },
-    });
-  };
+  createFolder(data, {
+    onSuccess: (newFolder) => {
+      toast.success("Priečinok bol vytvorený");
+      onFolderCreated?.(newFolder.name);
+      reset();
+      setOpen(false);
+    },
+    onError: (error: unknown) => {
+      let message = "Nepodarilo sa vytvoriť priečinok";
+
+      if (error instanceof Error) {
+        message = error.message;
+      } else if (typeof error === "object" && error !== null && "message" in error) {
+        message = (error as { message: string }).message;
+      }
+
+      toast.error(message);
+    },
+  });
+};
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>

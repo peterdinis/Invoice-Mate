@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
+import { CustomError } from "@/types/ErrorType";
 
 export async function GET() {
   try {
@@ -12,8 +13,11 @@ export async function GET() {
       .limit(5);
 
     return NextResponse.json(invoices);
-  } catch (error: any) {
-    console.error("Recent error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  } catch (err: unknown) {
+      if (err instanceof Error) {
+        const customErr: CustomError = { message: err.message };
+        return NextResponse.json({ error: customErr.message }, { status: 400 });
+      }
+      return NextResponse.json({ error: "Unknown error" }, { status: 400 });
+    }
 }

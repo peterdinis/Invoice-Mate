@@ -79,41 +79,49 @@ const ClientsWrapper: FC = () => {
   };
 
   const handleSaveEdit = () => {
-    if (!editedClient || !editedClient._id) return;
+  if (!editedClient || !editedClient._id) return;
 
-    updateClientMutation.mutate(
-      {
-        id: editedClient._id,
-        name: editedClient.name,
-        email: editedClient.email,
-        address: editedClient.address,
+  updateClientMutation.mutate(
+    {
+      id: editedClient._id,
+      name: editedClient.name,
+      email: editedClient.email,
+      address: editedClient.address,
+    },
+    {
+      onSuccess: (updatedClient) => {
+        toast({
+          title: "Klient bol upravený",
+          description: `Údaje klienta ${updatedClient.name} boli úspešne aktualizované.`,
+          duration: 3000,
+          className: "bg-green-800 text-white font-bold text-base",
+        });
+        setEditDialogOpen(false);
+        setSelectedClient(null);
+        setEditedClient(null);
       },
-      {
-        onSuccess: (updatedClient) => {
-          toast({
-            title: "Klient bol upravený",
-            description: `Údaje klienta ${updatedClient.name} boli úspešne aktualizované.`,
-            duration: 3000,
-            className: "bg-green-800 text-white font-bold text-base",
-          });
-          setEditDialogOpen(false);
-          setSelectedClient(null);
-          setEditedClient(null);
-        },
-        onError: (error: any) => {
-          toast({
-            title: "Chyba",
-            description: error?.message || "Nepodarilo sa upraviť klienta",
-            duration: 3000,
-            className: "bg-red-600 text-white font-bold text-base",
-          });
-        },
+      onError: (error: unknown) => {
+        let message = "Nepodarilo sa upraviť klienta";
+
+        if (error instanceof Error) {
+          message = error.message;
+        } else if (typeof error === "object" && error !== null && "message" in error) {
+          // Pre prípad custom error objektov
+          message = (error as { message: string }).message;
+        }
+
+        toast({
+          title: "Chyba",
+          description: message,
+          duration: 3000,
+          className: "bg-red-600 text-white font-bold text-base",
+        });
       },
-    );
-  };
+    },
+  );
+};
 
   const confirmDelete = () => {
-    // Tu pridaj logiku pre odstránenie klienta
     toast({
       title: "Klient bol odstránený",
       description: `Klient ${selectedClient?.name} bol úspešne odstránený.`,
