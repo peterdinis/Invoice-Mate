@@ -359,17 +359,36 @@ const InvoicesWrapper: FC = () => {
     },
   ];
 
-  const tableData = useMemo(() => {
+  const tableData: Invoice[] = useMemo(() => {
     return (
       data?.invoices.map((invoice) => ({
-        ...invoice,
-        id: invoice.invoiceNumber || invoice._id,
+        _id: invoice.id,
+        invoiceNumber: invoice.invoiceNumber,
+        client: {
+          _id:
+            typeof invoice.client === "object"
+              ? invoice.client.toString()
+              : invoice.client,
+          name: invoice.clientName,
+          email: invoice.clientEmail,
+        },
+        total: invoice.total,
+        status: invoice.status as Invoice["status"],
+        invoiceDate: invoice.invoiceDate.toISOString(),
+        dueDate: invoice.dueDate.toISOString(),
+        createdAt: invoice.createdAt.toISOString(),
+        updatedAt: invoice.updatedAt.toISOString(),
+        items: invoice.lineItems?.map((li) => ({
+          description: li.description,
+          quantity: li.quantity,
+          price: li.rate, // alebo amount podľa potreby
+        })),
       })) || []
     );
   }, [data?.invoices]);
 
   const table = useReactTable<Invoice>({
-    data: tableData as any,
+    data: tableData,
     columns,
     state: { sorting },
     onSortingChange: setSorting,
