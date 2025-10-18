@@ -59,7 +59,7 @@ export async function GET(request: NextRequest) {
       Invoice.countDocuments({
         invoiceDate: { $gte: firstDayOfLastMonth, $lt: firstDayOfMonth },
       }),
-      
+
       Invoice.countDocuments({
         status: "paid",
         invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },

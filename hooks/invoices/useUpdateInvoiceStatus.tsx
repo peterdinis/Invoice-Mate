@@ -12,6 +12,7 @@ export const useUpdateInvoiceStatus = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["updateInvoiceStatus"],
     mutationFn: async ({ id, status }: UpdateInvoiceStatusVariables) => {
       const res = await fetch(`/api/invoices/${id}`, {
         method: "PATCH",

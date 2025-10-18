@@ -2,13 +2,7 @@
 
 import { Card } from "@/components/ui/card";
 import { Suspense } from "react";
-import {
-  PieChart,
-  Pie,
-  Cell,
-  ResponsiveContainer,
-  Tooltip,
-} from "recharts";
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import { Badge } from "../ui/badge";
 import { Spinner } from "../ui/spinner";
 import { useInvoiceStatus } from "@/hooks/invoices/useInvoiceStatus";
@@ -23,8 +17,6 @@ export const InvoiceStatusChart = () => {
   const { data, isLoading, error } = useInvoiceStatus();
 
   const chartData = data?.data || fallbackData;
-
-  
 
   if (isLoading) {
     return (

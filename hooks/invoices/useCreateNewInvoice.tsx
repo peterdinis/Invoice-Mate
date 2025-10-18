@@ -28,6 +28,7 @@ export const useCreateInvoice = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["newInvoice"],
     mutationFn: async (invoiceData: CreateInvoiceData) => {
       const response = await fetch("/api/invoices", {
         method: "POST",

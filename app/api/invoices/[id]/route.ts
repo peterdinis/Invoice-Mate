@@ -21,7 +21,7 @@ export async function PATCH(
         { status: 400 },
       );
     }
-    
+
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       invoiceId,
       { status },
