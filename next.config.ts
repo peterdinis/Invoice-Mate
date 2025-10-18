@@ -5,8 +5,6 @@ const nextConfig: NextConfig = {
   experimental: {
     typedEnv: true,
     viewTransition: true,
-    turbopackFileSystemCacheForDev: true,
-    browserDebugInfoInTerminal: true,
   },
   typedRoutes: true,
 };

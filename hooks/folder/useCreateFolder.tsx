@@ -34,6 +34,7 @@ export function useCreateFolder() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["newFolder"],
     mutationFn: createFolder,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["folders"] });

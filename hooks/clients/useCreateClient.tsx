@@ -30,20 +30,14 @@ async function createClient(data: NewClient): Promise<Client> {
   return res.json();
 }
 
-/**
- * Custom React Query mutation hook for creating a new client
- */
 export function useCreateClient() {
   const queryClient = useQueryClient();
 
   return useMutation({
+    mutationKey: ["newClient"],
     mutationFn: createClient,
     onSuccess: (newClient) => {
-      // Optional: Update cached client list if it exists
       queryClient.invalidateQueries({ queryKey: ["clients"] });
-
-      // You could also optimistically update the cache like this:
-      // queryClient.setQueryData<Client[]>(["clients"], (old = []) => [...old, newClient]);
     },
     onError: (error: Error) => {
       console.error("Create client failed:", error.message);
