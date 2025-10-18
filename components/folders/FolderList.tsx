@@ -5,8 +5,8 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useFolders } from "@/hooks/folder/useFolders";
 import { Spinner } from "../ui/spinner";
-import type { Folder as FolderType } from "@/hooks/folder/useCreateFolder"; // typ
-import { Folder as FolderIcon, FolderOpen } from "lucide-react"; // ikony
+import type { Folder as FolderType } from "@/hooks/folder/useCreateFolder";
+import { Folder as FolderIcon, FolderOpen } from "lucide-react";
 
 interface FolderListProps {
   selectedFolder: string | null;

@@ -7,7 +7,6 @@ import { useParams } from "next/navigation";
 import { ArrowLeft, Download, Edit, Mail } from "lucide-react";
 import { toast } from "sonner";
 import { exportInvoiceToPDF } from "@/lib/pdfs/pdfExport";
-import { NotesSection } from "../notes/NotesSection";
 import CustomLink from "../shared/CustomLink";
 
 const InvoiceDetail = () => {
@@ -218,10 +217,6 @@ const InvoiceDetail = () => {
                 <p className="text-muted-foreground">{invoice.notes}</p>
               </Card>
             )}
-          </div>
-
-          <div className="lg:col-span-1">
-            <NotesSection />
           </div>
         </div>
       </div>
