@@ -352,14 +352,14 @@ const InvoicesWrapper: FC = () => {
         },
         total: invoice.total,
         status: invoice.status as Invoice["status"],
-        invoiceDate: new Date(invoice.invoiceDate).toLocaleDateString("sk-SK"),
-        dueDate: new Date(invoice.dueDate).toLocaleDateString("sk-SK"),
-        createdAt: new Date(invoice.createdAt).toLocaleDateString("sk-SK"),
-        updatedAt: new Date(invoice.updatedAt).toLocaleDateString("sk-SK"),
+        invoiceDate: invoice.invoiceDate as unknown as string,
+        dueDate: invoice.dueDate as unknown as string,
+        createdAt: invoice.createdAt as unknown as string,
+        updatedAt: invoice.updatedAt as unknown as string,
         items: invoice.lineItems?.map((li) => ({
           description: li.description,
           quantity: li.quantity,
-          price: li.rate, // alebo amount podľa potreby
+          price: li.rate,
         })),
       })) || []
     );
@@ -620,9 +620,8 @@ const InvoicesWrapper: FC = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Stav</p>
                   <span
-                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
-                      getStatusConfig(selectedInvoice.status).className
-                    }`}
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusConfig(selectedInvoice.status).className
+                      }`}
                   >
                     {getStatusConfig(selectedInvoice.status).label}
                   </span>
