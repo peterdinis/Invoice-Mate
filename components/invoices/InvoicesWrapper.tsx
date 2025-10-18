@@ -352,14 +352,14 @@ const InvoicesWrapper: FC = () => {
         },
         total: invoice.total,
         status: invoice.status as Invoice["status"],
-        invoiceDate: invoice.invoiceDate.toISOString(),
-        dueDate: invoice.dueDate.toISOString(),
-        createdAt: invoice.createdAt.toISOString(),
-        updatedAt: invoice.updatedAt.toISOString(),
+        invoiceDate: invoice.invoiceDate as unknown as string,
+        dueDate: invoice.dueDate as unknown as string,
+        createdAt: invoice.createdAt as unknown as string,
+        updatedAt: invoice.updatedAt as unknown as string,
         items: invoice.lineItems?.map((li) => ({
           description: li.description,
           quantity: li.quantity,
-          price: li.rate, // alebo amount podľa potreby
+          price: li.rate,
         })),
       })) || []
     );
