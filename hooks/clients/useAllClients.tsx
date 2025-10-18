@@ -11,7 +11,7 @@ export interface Client {
 
 export const useAllClients = () => {
   return useQuery<Client[], Error>({
-    queryKey: ["clients"],
+    queryKey: ["allClients"],
     queryFn: async () => {
       const response = await fetch("/api/clients/all");
 
