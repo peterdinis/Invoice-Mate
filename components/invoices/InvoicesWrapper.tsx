@@ -620,8 +620,9 @@ const InvoicesWrapper: FC = () => {
                 <div>
                   <p className="text-sm text-muted-foreground">Stav</p>
                   <span
-                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${getStatusConfig(selectedInvoice.status).className
-                      }`}
+                    className={`inline-flex items-center rounded-full px-2 py-1 text-xs font-medium ${
+                      getStatusConfig(selectedInvoice.status).className
+                    }`}
                   >
                     {getStatusConfig(selectedInvoice.status).label}
                   </span>
