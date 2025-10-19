@@ -15,7 +15,7 @@ const DashboardNavigation: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
 
-  const { data, isLoading, isError } = useSession()
+  const { data, isLoading, isError } = useSession();
 
   if (isLoading) {
     return (
