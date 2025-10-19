@@ -9,7 +9,6 @@ import { usePathname, useRouter } from "next/navigation";
 import CustomLink from "../shared/CustomLink";
 import ProfileDropdown from "../auth/ProfileDropdown";
 import { Spinner } from "../ui/spinner";
-import { useQuery } from "@tanstack/react-query";
 import { useSession } from "@/hooks/auth/useSession";
 
 const DashboardNavigation: FC = () => {
