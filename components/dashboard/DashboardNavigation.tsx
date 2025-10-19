@@ -3,51 +3,21 @@
 import { Button } from "@/components/ui/button";
 import { LayoutDashboard, FileText, Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FC, Suspense, useEffect, useState } from "react";
+import { FC, Suspense } from "react";
 import { ModeToggle } from "../shared/ModeToggle";
 import { usePathname, useRouter } from "next/navigation";
 import CustomLink from "../shared/CustomLink";
 import ProfileDropdown from "../auth/ProfileDropdown";
 import { Spinner } from "../ui/spinner";
+import { useSession } from "@/hooks/auth/useSession";
 
 const DashboardNavigation: FC = () => {
   const pathname = usePathname();
   const router = useRouter();
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const res = await fetch("/api/auth/get-session");
-        if (res.ok) {
-          const data = await res.json();
-          if (data.user) {
-            setIsAuthenticated(true);
-          } else {
-            router.push("/");
-          }
-        } else {
-          router.push("/");
-        }
-      } catch (err) {
-        console.error("Auth check failed", err);
-        router.push("/");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const { data, isLoading, isError } = useSession()
 
-    checkAuth();
-  }, [router]);
-
-  const navItems = [
-    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { path: "/invoices", label: "Faktúry", icon: FileText },
-    { path: "/clients", label: "Klienti", icon: Users },
-  ];
-
-  if (loading) {
+  if (isLoading) {
     return (
       <Suspense fallback={<Spinner />}>
         <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -62,9 +32,19 @@ const DashboardNavigation: FC = () => {
     );
   }
 
-  if (!isAuthenticated) {
+  // 🔹 Ak nie je používateľ prihlásený alebo došlo k chybe → presmeruj
+  if (isError || !data?.user) {
+    if (typeof window !== "undefined") {
+      router.push("/");
+    }
     return null;
   }
+
+  const navItems = [
+    { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
+    { path: "/invoices", label: "Faktúry", icon: FileText },
+    { path: "/clients", label: "Klienti", icon: Users },
+  ];
 
   return (
     <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -103,7 +83,7 @@ const DashboardNavigation: FC = () => {
               );
             })}
             <ModeToggle />
-            {isAuthenticated && <ProfileDropdown />}
+            <ProfileDropdown />
           </div>
         </div>
       </div>
