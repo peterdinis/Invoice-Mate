@@ -21,6 +21,8 @@ export interface Client {
   invoices: ClientInvoiceSummary[];
 }
 
+export type ClientWrapper = Partial<Client>;
+
 interface ClientsResponse {
   data: Client[];
   pagination: {

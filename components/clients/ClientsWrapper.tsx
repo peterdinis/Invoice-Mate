@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Mail, Eye, Search as SearchIcon, Trash2, Edit } from "lucide-react";
 import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { ClientDialog } from "./ClientDialog";
-import { useClients } from "@/hooks/clients/useClients";
+import { Client, ClientWrapper, useClients } from "@/hooks/clients/useClients";
 import { Skeleton } from "../ui/skeleton";
 import { motion } from "framer-motion";
 import { useCopyToClipboard } from "@uidotdev/usehooks";
@@ -50,23 +50,23 @@ const ClientsWrapper: FC = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<IClient | null>(null);
-  const [editedClient, setEditedClient] = useState<Partial<IClient> | null>(
+  const [selectedClient, setSelectedClient] = useState<ClientWrapper | null>(null);
+  const [editedClient, setEditedClient] = useState<ClientWrapper | null>(
     null,
   );
 
-  const handleViewClient = (client: IClient) => {
+  const handleViewClient = (client: ClientWrapper) => {
     setSelectedClient(client);
     setViewDialogOpen(true);
   };
 
-  const handleEditClient = (client: IClient) => {
+  const handleEditClient = (client: ClientWrapper) => {
     setSelectedClient(client);
     setEditedClient({ ...client });
     setEditDialogOpen(true);
   };
 
-  const handleDeleteClient = (client: IClient) => {
+  const handleDeleteClient = (client: ClientWrapper) => {
     setSelectedClient(client);
     setDeleteDialogOpen(true);
   };
@@ -201,7 +201,7 @@ const ClientsWrapper: FC = () => {
             ) : (
               <>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {clients.map((client: any, index) => (
+                  {clients.map((client, index) => (
                     <Card
                       key={client._id}
                       className="p-6 hover:shadow-lg transition-all duration-300 hover:-translate-y-1"
