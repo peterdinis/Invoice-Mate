@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Mail, Eye, Search as SearchIcon, Trash2, Edit } from "lucide-react";
 import DashboardNavigation from "../dashboard/DashboardNavigation";
 import { ClientDialog } from "./ClientDialog";
-import { Client, ClientWrapper, useClients } from "@/hooks/clients/useClients";
+import { ClientWrapper, useClients } from "@/hooks/clients/useClients";
 import { Skeleton } from "../ui/skeleton";
 import { motion } from "framer-motion";
 import { useCopyToClipboard } from "@uidotdev/usehooks";
