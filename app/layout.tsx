@@ -27,7 +27,6 @@ export const metadata: Metadata = {
     description:
       "Easily manage your clients, invoices, and payments in one place.",
     type: "website",
-    url: "https://yourapp.com",
   },
   twitter: {
     card: "summary_large_image",
