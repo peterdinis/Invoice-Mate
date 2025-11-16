@@ -34,7 +34,11 @@ const TransitionProvider: FC<TransitionProviderProps> = ({
   };
 
   return (
-    <motion.div initial={initial} animate={{ opacity: 1, x: 0, y: 0 }} transition={transition}>
+    <motion.div
+      initial={initial}
+      animate={{ opacity: 1, x: 0, y: 0 }}
+      transition={transition}
+    >
       {children}
     </motion.div>
   );
