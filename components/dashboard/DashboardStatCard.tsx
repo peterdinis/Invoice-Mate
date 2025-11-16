@@ -36,5 +36,5 @@ export const DashboardStatCard = memo(
         </div>
       </Card>
     );
-  }
+  },
 );

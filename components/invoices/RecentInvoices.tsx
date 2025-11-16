@@ -25,7 +25,7 @@ interface InvoiceItemProps {
 const InvoiceItem = memo(({ invoice }: InvoiceItemProps) => {
   const formattedDate = useMemo(
     () => new Date(invoice.createdAt).toLocaleDateString(),
-    [invoice.createdAt]
+    [invoice.createdAt],
   );
 
   return (
@@ -47,7 +47,11 @@ const InvoiceItem = memo(({ invoice }: InvoiceItemProps) => {
           <p className="text-sm text-muted-foreground">{formattedDate}</p>
         </div>
         <CustomLink href={`/invoices/${invoice._id}`}>
-          <Button variant="ghost" size="icon" aria-label={`View invoice ${invoice.invoiceNumber}`}>
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label={`View invoice ${invoice.invoiceNumber}`}
+          >
             <Eye className="w-4 h-4" />
           </Button>
         </CustomLink>
@@ -56,7 +60,7 @@ const InvoiceItem = memo(({ invoice }: InvoiceItemProps) => {
   );
 });
 
-InvoiceItem.displayName = 'InvoiceItem';
+InvoiceItem.displayName = "InvoiceItem";
 
 // Memoized state components
 const ErrorState = memo(() => (
@@ -105,20 +109,21 @@ const LoadingState = memo(() => (
   </Card>
 ));
 
-ErrorState.displayName = 'ErrorState';
-EmptyState.displayName = 'EmptyState';
-LoadingState.displayName = 'LoadingState';
+ErrorState.displayName = "ErrorState";
+EmptyState.displayName = "EmptyState";
+LoadingState.displayName = "LoadingState";
 
 // Main Component
 export const RecentInvoices = () => {
   const { data: invoices, isLoading, isError } = useRecentInvoices();
 
   // Memoize the invoices list to prevent unnecessary re-renders
-  const invoiceItems = useMemo(() => 
-    invoices?.map((invoice: RecentInvoice) => (
-      <InvoiceItem key={invoice._id} invoice={invoice} />
-    )) || [],
-    [invoices]
+  const invoiceItems = useMemo(
+    () =>
+      invoices?.map((invoice: RecentInvoice) => (
+        <InvoiceItem key={invoice._id} invoice={invoice} />
+      )) || [],
+    [invoices],
   );
 
   // Early returns for different states
@@ -135,9 +140,7 @@ export const RecentInvoices = () => {
         </CustomLink>
       </div>
 
-      <div className="space-y-4">
-        {invoiceItems}
-      </div>
+      <div className="space-y-4">{invoiceItems}</div>
     </Card>
   );
 };

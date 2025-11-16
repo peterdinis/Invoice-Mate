@@ -50,10 +50,10 @@ const ClientsWrapper: FC = () => {
   const [viewDialogOpen, setViewDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedClient, setSelectedClient] = useState<ClientWrapper | null>(null);
-  const [editedClient, setEditedClient] = useState<ClientWrapper | null>(
+  const [selectedClient, setSelectedClient] = useState<ClientWrapper | null>(
     null,
   );
+  const [editedClient, setEditedClient] = useState<ClientWrapper | null>(null);
 
   const handleViewClient = (client: ClientWrapper) => {
     setSelectedClient(client);

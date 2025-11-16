@@ -30,27 +30,40 @@ import { InvoiceItem } from "@/types/InvoiceTypes";
 interface LineItemProps {
   item: InvoiceItem;
   index: number;
-  onUpdate: (id: string, field: keyof InvoiceItem, value: string | number) => void;
+  onUpdate: (
+    id: string,
+    field: keyof InvoiceItem,
+    value: string | number,
+  ) => void;
   onRemove: (id: string) => void;
   canRemove: boolean;
 }
 
 const LineItem = ({ item, onUpdate, onRemove, canRemove }: LineItemProps) => {
-  const handleQuantityChange = useCallback((value: string) => {
-    onUpdate(item.id, "quantity", parseInt(value) || 0);
-  }, [item.id, onUpdate]);
+  const handleQuantityChange = useCallback(
+    (value: string) => {
+      onUpdate(item.id, "quantity", parseInt(value) || 0);
+    },
+    [item.id, onUpdate],
+  );
 
-  const handleRateChange = useCallback((value: string) => {
-    onUpdate(item.id, "rate", parseFloat(value) || 0);
-  }, [item.id, onUpdate]);
+  const handleRateChange = useCallback(
+    (value: string) => {
+      onUpdate(item.id, "rate", parseFloat(value) || 0);
+    },
+    [item.id, onUpdate],
+  );
 
-  const handleDescriptionChange = useCallback((value: string) => {
-    onUpdate(item.id, "description", value);
-  }, [item.id, onUpdate]);
+  const handleDescriptionChange = useCallback(
+    (value: string) => {
+      onUpdate(item.id, "description", value);
+    },
+    [item.id, onUpdate],
+  );
 
-  const amount = useMemo(() => 
-    (item.quantity * item.rate).toFixed(2),
-    [item.quantity, item.rate]
+  const amount = useMemo(
+    () => (item.quantity * item.rate).toFixed(2),
+    [item.quantity, item.rate],
   );
 
   return (
@@ -103,11 +116,11 @@ const LineItem = ({ item, onUpdate, onRemove, canRemove }: LineItemProps) => {
 };
 
 // Memoized Select Components
-const FolderSelect = ({ 
-  value, 
-  onValueChange 
-}: { 
-  value: string; 
+const FolderSelect = ({
+  value,
+  onValueChange,
+}: {
+  value: string;
   onValueChange: (value: string) => void;
 }) => {
   const { data: folders, isLoading, error } = useFolders();
@@ -123,9 +136,7 @@ const FolderSelect = ({
             <Spinner />
           </div>
         ) : error ? (
-          <div className="text-red-500 p-2 text-sm">
-            Error loading folders
-          </div>
+          <div className="text-red-500 p-2 text-sm">Error loading folders</div>
         ) : (
           folders?.map((folder) => (
             <SelectItem key={folder._id} value={folder._id}>
@@ -138,11 +149,11 @@ const FolderSelect = ({
   );
 };
 
-const ClientSelect = ({ 
-  value, 
-  onValueChange 
-}: { 
-  value: string; 
+const ClientSelect = ({
+  value,
+  onValueChange,
+}: {
+  value: string;
   onValueChange: (value: string) => void;
 }) => {
   const { data: clients, isLoading, error } = useAllClients();
@@ -158,9 +169,7 @@ const ClientSelect = ({
             <Spinner />
           </div>
         ) : error ? (
-          <div className="text-red-500 p-2 text-sm">
-            Error loading clients
-          </div>
+          <div className="text-red-500 p-2 text-sm">Error loading clients</div>
         ) : (
           clients?.map((client) => (
             <SelectItem key={client._id} value={client._id}>
@@ -191,29 +200,31 @@ const NewInvoice = () => {
 
   // Memoized callbacks
   const addItem = useCallback(() => {
-    setItems(prev => [
+    setItems((prev) => [
       ...prev,
       { id: Date.now().toString(), description: "", quantity: 1, rate: 0 },
     ]);
   }, []);
 
-  const removeItem = useCallback((id: string) => {
-    if (items.length > 1) {
-      setItems(prev => prev.filter((item) => item.id !== id));
-    }
-  }, [items.length]);
+  const removeItem = useCallback(
+    (id: string) => {
+      if (items.length > 1) {
+        setItems((prev) => prev.filter((item) => item.id !== id));
+      }
+    },
+    [items.length],
+  );
 
-  const updateItem = useCallback((
-    id: string,
-    field: keyof InvoiceItem,
-    value: string | number,
-  ) => {
-    setItems(prev =>
-      prev.map((item) =>
-        item.id === id ? { ...item, [field]: value } : item,
-      ),
-    );
-  }, []);
+  const updateItem = useCallback(
+    (id: string, field: keyof InvoiceItem, value: string | number) => {
+      setItems((prev) =>
+        prev.map((item) =>
+          item.id === id ? { ...item, [field]: value } : item,
+        ),
+      );
+    },
+    [],
+  );
 
   const handleClientChange = useCallback((clientId: string) => {
     setSelectedClient(clientId);
@@ -229,10 +240,16 @@ const NewInvoice = () => {
 
   const handleSave = useCallback(() => {
     // Get form values directly from state instead of DOM
-    const invoiceNumber = (document.getElementById("invoiceNumber") as HTMLInputElement)?.value;
-    const invoiceDate = (document.getElementById("invoiceDate") as HTMLInputElement)?.value;
-    const dueDate = (document.getElementById("dueDate") as HTMLInputElement)?.value;
-    const notes = (document.getElementById("notes") as HTMLTextAreaElement)?.value;
+    const invoiceNumber = (
+      document.getElementById("invoiceNumber") as HTMLInputElement
+    )?.value;
+    const invoiceDate = (
+      document.getElementById("invoiceDate") as HTMLInputElement
+    )?.value;
+    const dueDate = (document.getElementById("dueDate") as HTMLInputElement)
+      ?.value;
+    const notes = (document.getElementById("notes") as HTMLTextAreaElement)
+      ?.value;
 
     // Validation
     if (!selectedFolder) {
@@ -256,7 +273,9 @@ const NewInvoice = () => {
     }
 
     // Validate line items
-    const hasEmptyItems = items.some(item => !item.description || item.quantity <= 0 || item.rate < 0);
+    const hasEmptyItems = items.some(
+      (item) => !item.description || item.quantity <= 0 || item.rate < 0,
+    );
     if (hasEmptyItems) {
       toast.error("Please fill in all line items correctly");
       return;
@@ -288,21 +307,30 @@ const NewInvoice = () => {
         navigate.push("/invoices");
       },
     });
-  }, [selectedFolder, selectedClient, clientDetails, items, totalAmount, createInvoice, navigate]);
+  }, [
+    selectedFolder,
+    selectedClient,
+    clientDetails,
+    items,
+    totalAmount,
+    createInvoice,
+    navigate,
+  ]);
 
   // Memoized line items rendering
-  const lineItems = useMemo(() => 
-    items.map((item, index) => (
-      <LineItem
-        key={item.id}
-        item={item}
-        index={index}
-        onUpdate={updateItem}
-        onRemove={removeItem}
-        canRemove={items.length > 1}
-      />
-    )),
-    [items, updateItem, removeItem]
+  const lineItems = useMemo(
+    () =>
+      items.map((item, index) => (
+        <LineItem
+          key={item.id}
+          item={item}
+          index={index}
+          onUpdate={updateItem}
+          onRemove={removeItem}
+          canRemove={items.length > 1}
+        />
+      )),
+    [items, updateItem, removeItem],
   );
 
   return (
@@ -325,7 +353,10 @@ const NewInvoice = () => {
           </h2>
           <div className="space-y-2">
             <Label htmlFor="folder">Select Folder *</Label>
-            <FolderSelect value={selectedFolder} onValueChange={setSelectedFolder} />
+            <FolderSelect
+              value={selectedFolder}
+              onValueChange={setSelectedFolder}
+            />
             {!selectedFolder && (
               <p className="text-sm text-red-500">Please select a folder</p>
             )}
@@ -338,7 +369,10 @@ const NewInvoice = () => {
           </h2>
           <div className="space-y-2 mb-4">
             <Label htmlFor="client">Select Client *</Label>
-            <ClientSelect value={selectedClient} onValueChange={handleClientChange} />
+            <ClientSelect
+              value={selectedClient}
+              onValueChange={handleClientChange}
+            />
             {!selectedClient && (
               <p className="text-sm text-red-500">Please select a client</p>
             )}
@@ -429,9 +463,7 @@ const NewInvoice = () => {
             </Button>
           </div>
 
-          <div className="space-y-4">
-            {lineItems}
-          </div>
+          <div className="space-y-4">{lineItems}</div>
 
           <div className="mt-6 pt-6 border-t border-border">
             <div className="flex justify-between items-center">

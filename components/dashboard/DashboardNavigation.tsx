@@ -12,7 +12,9 @@ import { Spinner } from "../ui/spinner";
 import { useSession } from "@/hooks/auth/useSession";
 
 // Lazy load heavy components
-const ProfileDropdown = dynamic(() => import("../auth/ProfileDropdown"), { ssr: false });
+const ProfileDropdown = dynamic(() => import("../auth/ProfileDropdown"), {
+  ssr: false,
+});
 
 // Memoized NavItem to avoid re-renders
 interface NavItemProps {
@@ -25,7 +27,10 @@ const NavItem: FC<NavItemProps> = memo(({ path, label, Icon, isActive }) => (
   <CustomLink href={path}>
     <Button
       variant={isActive ? "default" : "ghost"}
-      className={cn("gap-2", !isActive && "text-muted-foreground hover:text-foreground")}
+      className={cn(
+        "gap-2",
+        !isActive && "text-muted-foreground hover:text-foreground",
+      )}
     >
       <Icon className="w-4 h-4" />
       {label}
@@ -51,7 +56,7 @@ const DashboardNavigation: FC = () => {
       { path: "/invoices", label: "Faktúry", icon: FileText },
       { path: "/clients", label: "Klienti", icon: Users },
     ],
-    []
+    [],
   );
 
   // Show spinner while loading
@@ -86,9 +91,16 @@ const DashboardNavigation: FC = () => {
           <div className="flex items-center gap-2">
             {navItems.map(({ path, label, icon: Icon }) => {
               const isActive =
-                pathname === path || (path !== "/" && pathname.startsWith(path));
+                pathname === path ||
+                (path !== "/" && pathname.startsWith(path));
               return (
-                <NavItem key={path} path={path} label={label} Icon={Icon} isActive={isActive} />
+                <NavItem
+                  key={path}
+                  path={path}
+                  label={label}
+                  Icon={Icon}
+                  isActive={isActive}
+                />
               );
             })}
             <ModeToggle />
