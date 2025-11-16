@@ -11,6 +11,7 @@ import { InvoiceStatusChart } from "../invoices/InvoiceStatusChart";
 import CustomLink from "../shared/CustomLink";
 import { Spinner } from "../ui/spinner";
 import { useInvoiceStats } from "@/hooks/invoices/useInvoicesStats";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const DashboardWrapper: FC = () => {
   const { data: stats, isLoading, isError } = useInvoiceStats();
@@ -53,10 +54,14 @@ const DashboardWrapper: FC = () => {
             </div>
             <nav aria-label="dashboard actions" className="flex gap-2">
               <CustomLink href="/invoices/new">
-                <Button className="gap-2" size="lg">
-                  <Plus className="w-5 h-5" />
-                  Nová faktúra
-                </Button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button className="gap-2" size="lg">
+                      <Plus className="w-5 h-5" />
+                    </Button>
+                  </TooltipTrigger>
+                  <TooltipContent>Nová faktúra</TooltipContent>
+                </Tooltip>
               </CustomLink>
             </nav>
           </header>

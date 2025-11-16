@@ -30,6 +30,7 @@ const ClientsWrapper: FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [page, setPage] = useState(1);
   const [, copyToClipboard] = useCopyToClipboard();
+
   const { data, isLoading, isError, isFetching } = useClients({
     page,
     limit: 9,
@@ -40,8 +41,9 @@ const ClientsWrapper: FC = () => {
   const clients = data?.data ?? [];
   const pagination = data?.pagination;
 
+  // FIX → bezpečné mapovanie
   const clientInvoicesCount = useMemo(
-    () => clients.map((item) => item.invoices.length),
+    () => clients.map((item) => item.invoices?.length ?? 0),
     [clients],
   );
 
@@ -103,16 +105,9 @@ const ClientsWrapper: FC = () => {
         onError: (error: unknown) => {
           let message = "Nepodarilo sa upraviť klienta";
 
-          if (error instanceof Error) {
-            message = error.message;
-          } else if (
-            typeof error === "object" &&
-            error !== null &&
-            "message" in error
-          ) {
-            // Pre prípad custom error objektov
+          if (error instanceof Error) message = error.message;
+          else if (typeof error === "object" && error && "message" in error)
             message = (error as { message: string }).message;
-          }
 
           toast({
             title: "Chyba",
@@ -224,6 +219,7 @@ const ClientsWrapper: FC = () => {
                           >
                             <Mail className="w-4 h-4" />
                           </Button>
+
                           <Button
                             variant="ghost"
                             size="icon"
@@ -231,6 +227,7 @@ const ClientsWrapper: FC = () => {
                           >
                             <Eye className="w-4 h-4" />
                           </Button>
+
                           <Button
                             variant="ghost"
                             size="icon"
@@ -238,6 +235,7 @@ const ClientsWrapper: FC = () => {
                           >
                             <Edit className="w-4 h-4 text-blue-600" />
                           </Button>
+
                           <Button
                             variant="ghost"
                             size="icon"
@@ -264,6 +262,7 @@ const ClientsWrapper: FC = () => {
                             {clientInvoicesCount[index]}
                           </p>
                         </div>
+
                         <div>
                           <p className="text-xs text-muted-foreground">
                             Celkom
@@ -287,9 +286,11 @@ const ClientsWrapper: FC = () => {
                     >
                       Predchádzajúca
                     </Button>
+
                     <span className="text-sm text-muted-foreground">
                       Strana {pagination.page} / {pagination.pages}
                     </span>
+
                     <Button
                       variant="outline"
                       disabled={page >= pagination.pages}
@@ -315,7 +316,7 @@ const ClientsWrapper: FC = () => {
         </div>
       </div>
 
-      {/* Dialog pre zobrazenie detailov klienta */}
+      {/* Dialog - Details */}
       <Dialog open={viewDialogOpen} onOpenChange={setViewDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -388,7 +389,7 @@ const ClientsWrapper: FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog pre úpravu klienta */}
+      {/* Dialog - Edit */}
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -419,7 +420,6 @@ const ClientsWrapper: FC = () => {
                     id="name"
                     value={editedClient.name || ""}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    placeholder="Zadajte meno klienta"
                   />
                 </div>
 
@@ -430,7 +430,6 @@ const ClientsWrapper: FC = () => {
                     type="email"
                     value={editedClient.email || ""}
                     onChange={(e) => handleInputChange("email", e.target.value)}
-                    placeholder="Zadajte email"
                   />
                 </div>
 
@@ -442,7 +441,6 @@ const ClientsWrapper: FC = () => {
                     onChange={(e) =>
                       handleInputChange("address", e.target.value)
                     }
-                    placeholder="Zadajte adresu"
                   />
                 </div>
               </div>
@@ -464,7 +462,7 @@ const ClientsWrapper: FC = () => {
         </DialogContent>
       </Dialog>
 
-      {/* Dialog pre odstránenie klienta */}
+      {/* Dialog - Delete */}
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>

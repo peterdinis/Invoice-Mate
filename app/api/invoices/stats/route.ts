@@ -33,7 +33,7 @@ function getMonthDates(now: Date = new Date()) {
 
 export async function GET(request: NextRequest) {
   try {
-    // Check cache first
+    // Cache check
     if (cache && Date.now() - cache.timestamp < CACHE_DURATION) {
       return NextResponse.json(cache.data, {
         headers: {
@@ -56,7 +56,6 @@ export async function GET(request: NextRequest) {
     const stats = await Invoice.aggregate([
       {
         $facet: {
-          // Revenue statistics
           totalRevenue: [
             { $match: { status: "paid" } },
             { $group: { _id: null, total: { $sum: "$total" } } },
@@ -82,8 +81,9 @@ export async function GET(request: NextRequest) {
             },
             { $group: { _id: null, total: { $sum: "$total" } } },
           ],
-          // Invoice counts
+
           totalInvoices: [{ $count: "count" }],
+
           thisMonthInvoices: [
             {
               $match: {
@@ -92,6 +92,7 @@ export async function GET(request: NextRequest) {
             },
             { $count: "count" },
           ],
+
           lastMonthInvoices: [
             {
               $match: {
@@ -103,6 +104,7 @@ export async function GET(request: NextRequest) {
             },
             { $count: "count" },
           ],
+
           paidInvoicesThisMonth: [
             {
               $match: {
@@ -116,7 +118,8 @@ export async function GET(request: NextRequest) {
       },
     ]);
 
-    const [
+    // Correct object destructuring
+    const {
       totalRevenue,
       thisMonthRevenue,
       lastMonthRevenue,
@@ -124,18 +127,19 @@ export async function GET(request: NextRequest) {
       thisMonthInvoices,
       lastMonthInvoices,
       paidInvoicesThisMonth,
-    ] = stats[0];
+    } = stats[0];
 
-    // Extract values
+    // Values
     const totalRevenueAmount = totalRevenue[0]?.total || 0;
     const thisMonthAmount = thisMonthRevenue[0]?.total || 0;
     const lastMonthAmount = lastMonthRevenue[0]?.total || 0;
+
     const totalInvoicesCount = totalInvoices[0]?.count || 0;
     const thisMonthInvoicesCount = thisMonthInvoices[0]?.count || 0;
     const lastMonthInvoicesCount = lastMonthInvoices[0]?.count || 0;
     const paidInvoicesCount = paidInvoicesThisMonth[0]?.count || 0;
 
-    // Calculate changes
+    // Changes
     const revenueChange =
       lastMonthAmount > 0
         ? ((thisMonthAmount - lastMonthAmount) / lastMonthAmount) * 100
@@ -154,7 +158,7 @@ export async function GET(request: NextRequest) {
 
     const responseData = {
       totalRevenue: totalRevenueAmount,
-      revenueChange: Math.round(revenueChange * 10) / 10, // Better than toFixed
+      revenueChange: Math.round(revenueChange * 10) / 10,
       totalInvoices: totalInvoicesCount,
       invoiceChange: Math.round(invoiceChange * 10) / 10,
       thisMonthRevenue: thisMonthAmount,
@@ -165,7 +169,7 @@ export async function GET(request: NextRequest) {
       updatedAt: now.toISOString(),
     };
 
-    // Update cache
+    // Cache update
     cache = {
       data: responseData,
       timestamp: Date.now(),
@@ -181,9 +185,8 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching dashboard stats:", err);
     dbConnected = false;
 
-    // Return cached data even if stale as fallback
+    // Fallback stale cache
     if (cache) {
-      console.log("Returning stale cached data due to error");
       return NextResponse.json(cache.data, {
         headers: {
           "Cache-Control": "no-cache",
