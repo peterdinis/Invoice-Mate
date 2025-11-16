@@ -1,8 +1,8 @@
 import { Spinner } from "@/components/ui/spinner";
-import { FC } from "react";
+import { FC, Suspense } from "react";
 
 const Loader: FC = () => {
-  return <Spinner />;
+  return <Suspense fallback={<Spinner />} />
 };
 
 export default Loader;
