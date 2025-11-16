@@ -1,8 +1,8 @@
 "use client";
 
-import { FC, Suspense, memo, useMemo } from "react";
+import { FC, Suspense, memo, useMemo, useState, SVGProps } from "react";
 import { Button } from "@/components/ui/button";
-import { LayoutDashboard, FileText, Users } from "lucide-react";
+import { LayoutDashboard, FileText, Users, Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModeToggle } from "../shared/ModeToggle";
 import { usePathname, useRouter } from "next/navigation";
@@ -10,26 +10,27 @@ import CustomLink from "../shared/CustomLink";
 import dynamic from "next/dynamic";
 import { Spinner } from "../ui/spinner";
 import { useSession } from "@/hooks/auth/useSession";
+import { motion, AnimatePresence } from "framer-motion";
 
-// Lazy load heavy components
 const ProfileDropdown = dynamic(() => import("../auth/ProfileDropdown"), {
   ssr: false,
 });
 
-// Memoized NavItem to avoid re-renders
 interface NavItemProps {
   path: string;
   label: string;
-  Icon: FC<React.SVGProps<SVGSVGElement>>;
+  Icon: FC<SVGProps<SVGSVGElement>>;
   isActive: boolean;
+  onClick?: () => void;
 }
-const NavItem: FC<NavItemProps> = memo(({ path, label, Icon, isActive }) => (
+const NavItem: FC<NavItemProps> = memo(({ path, label, Icon, isActive, onClick }) => (
   <CustomLink href={path}>
     <Button
+      onClick={onClick}
       variant={isActive ? "default" : "ghost"}
       className={cn(
-        "gap-2",
-        !isActive && "text-muted-foreground hover:text-foreground",
+        "gap-2 w-full justify-start md:w-auto",
+        !isActive && "text-muted-foreground hover:text-foreground"
       )}
     >
       <Icon className="w-4 h-4" />
@@ -43,23 +44,22 @@ const DashboardNavigation: FC = () => {
   const router = useRouter();
   const { data, isLoading, isError } = useSession();
 
-  // Redirect if session fails
+  const [menuOpen, setMenuOpen] = useState(false);
+
   if (isError || (!isLoading && !data?.user)) {
     if (typeof window !== "undefined") router.push("/");
     return null;
   }
 
-  // Navigation items memoized
   const navItems = useMemo(
     () => [
       { path: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
       { path: "/invoices", label: "Faktúry", icon: FileText },
       { path: "/clients", label: "Klienti", icon: Users },
     ],
-    [],
+    []
   );
 
-  // Show spinner while loading
   if (isLoading) {
     return (
       <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
@@ -77,6 +77,7 @@ const DashboardNavigation: FC = () => {
     <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
+
           {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
@@ -87,12 +88,13 @@ const DashboardNavigation: FC = () => {
             </span>
           </div>
 
-          {/* Nav Items */}
-          <div className="flex items-center gap-2">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-2">
             {navItems.map(({ path, label, icon: Icon }) => {
               const isActive =
                 pathname === path ||
                 (path !== "/" && pathname.startsWith(path));
+
               return (
                 <NavItem
                   key={path}
@@ -103,13 +105,67 @@ const DashboardNavigation: FC = () => {
                 />
               );
             })}
+
             <ModeToggle />
+
             <Suspense fallback={<Spinner />}>
               <ProfileDropdown />
             </Suspense>
           </div>
+
+          {/* Mobile Hamburger */}
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={() => setMenuOpen((p) => !p)}
+          >
+            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </Button>
         </div>
       </div>
+
+      {/* MOBILE MENU PANEL */}
+      <AnimatePresence>
+        {menuOpen && (
+          <motion.div
+            key="mobile-menu"
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="md:hidden border-t border-border bg-card"
+          >
+            <div className="container mx-auto px-4 py-4 space-y-2">
+
+              {navItems.map(({ path, label, icon: Icon }) => {
+                const isActive =
+                  pathname === path ||
+                  (path !== "/" && pathname.startsWith(path));
+
+                return (
+                  <NavItem
+                    key={path}
+                    path={path}
+                    label={label}
+                    Icon={Icon}
+                    isActive={isActive}
+                    onClick={() => setMenuOpen(false)}
+                  />
+                );
+              })}
+
+              <div className="flex items-center justify-between pt-4">
+                <ModeToggle />
+                <Suspense fallback={<Spinner />}>
+                  <ProfileDropdown />
+                </Suspense>
+              </div>
+
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </nav>
   );
 };
