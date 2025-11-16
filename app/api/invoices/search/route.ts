@@ -19,25 +19,25 @@ async function ensureConnection() {
 export async function GET(req: Request) {
   try {
     await ensureConnection();
-    
+
     const { searchParams } = new URL(req.url);
     const query = (searchParams.get("q") || "").trim();
     const limit = Math.min(
       MAX_LIMIT,
-      parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT))
+      parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT)),
     );
 
     if (query.length < MIN_QUERY_LENGTH) {
       return NextResponse.json(
         { error: `Query must be at least ${MIN_QUERY_LENGTH} characters` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     if (query.length > MAX_QUERY_LENGTH) {
       return NextResponse.json(
         { error: `Query too long (max ${MAX_QUERY_LENGTH} characters)` },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -49,7 +49,9 @@ export async function GET(req: Request) {
     };
 
     const invoices = await Invoice.find(searchFilter)
-      .select("invoiceNumber status total dueDate invoiceDate clientName createdAt")
+      .select(
+        "invoiceNumber status total dueDate invoiceDate clientName createdAt",
+      )
       .populate({
         path: "client",
         select: "name email phone",
@@ -63,48 +65,47 @@ export async function GET(req: Request) {
       .lean()
       .maxTimeMS(5000);
 
-    return NextResponse.json({
-      data: invoices,
-      meta: {
-        count: invoices.length,
-        hasMore: invoices.length === limit,
-        query: query
-      }
-    }, {
-      headers: {
-        'Cache-Control': query ? 'no-cache' : 'public, s-maxage=60',
+    return NextResponse.json(
+      {
+        data: invoices,
+        meta: {
+          count: invoices.length,
+          hasMore: invoices.length === limit,
+          query: query,
+        },
       },
-    });
-
+      {
+        headers: {
+          "Cache-Control": query ? "no-cache" : "public, s-maxage=60",
+        },
+      },
+    );
   } catch (err: unknown) {
     console.error("Error searching invoices:", err);
     dbConnected = false;
 
     if (err instanceof Error) {
-      if (err.name === 'MongoNetworkError') {
+      if (err.name === "MongoNetworkError") {
         return NextResponse.json(
           { error: "Database connection failed" },
-          { status: 503 }
+          { status: 503 },
         );
       }
 
-      if (err.message.includes('timeout')) {
+      if (err.message.includes("timeout")) {
         return NextResponse.json(
           { error: "Search timeout - try a more specific query" },
-          { status: 408 }
+          { status: 408 },
         );
       }
 
       const customErr: CustomError = { message: err.message };
-      return NextResponse.json(
-        { error: customErr.message }, 
-        { status: 400 }
-      );
+      return NextResponse.json({ error: customErr.message }, { status: 400 });
     }
-    
+
     return NextResponse.json(
-      { error: "Internal server error" }, 
-      { status: 500 }
+      { error: "Internal server error" },
+      { status: 500 },
     );
   }
 }

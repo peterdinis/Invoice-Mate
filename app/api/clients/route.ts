@@ -21,8 +21,17 @@ export async function GET(req: NextRequest) {
     }
 
     const { searchParams } = new URL(req.url);
-    const page = Math.max(DEFAULT_PAGE, parseInt(searchParams.get("page") || String(DEFAULT_PAGE), 10));
-    const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT), 10)));
+    const page = Math.max(
+      DEFAULT_PAGE,
+      parseInt(searchParams.get("page") || String(DEFAULT_PAGE), 10),
+    );
+    const limit = Math.min(
+      MAX_LIMIT,
+      Math.max(
+        1,
+        parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT), 10),
+      ),
+    );
     const searchTerm = searchParams.get("search")?.trim() || "";
     const skip = (page - 1) * limit;
 
@@ -63,7 +72,7 @@ export async function GET(req: NextRequest) {
         { $skip: skip },
         { $limit: limit },
       ]),
-      Client.countDocuments(filter)
+      Client.countDocuments(filter),
     ]);
 
     return NextResponse.json({
@@ -102,20 +111,22 @@ export async function POST(req: NextRequest) {
     if (!name?.trim() || !email?.trim()) {
       return NextResponse.json(
         { error: "Name and email are required" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     // Check for existing email concurrently with other operations
     const [existingClient] = await Promise.all([
-      Client.findOne({ email: email.trim().toLowerCase() }).select('_id').lean(),
+      Client.findOne({ email: email.trim().toLowerCase() })
+        .select("_id")
+        .lean(),
       // Add any other async operations you might need
     ]);
 
     if (existingClient) {
       return NextResponse.json(
         { error: "Client with this email already exists" },
-        { status: 409 }
+        { status: 409 },
       );
     }
 
@@ -127,41 +138,46 @@ export async function POST(req: NextRequest) {
     });
 
     // Return minimal response for better performance
-    return NextResponse.json({
-      _id: newClient._id,
-      name: newClient.name,
-      email: newClient.email,
-      address: newClient.address,
-    }, { status: 201 });
-
+    return NextResponse.json(
+      {
+        _id: newClient._id,
+        name: newClient.name,
+        email: newClient.email,
+        address: newClient.address,
+      },
+      { status: 201 },
+    );
   } catch (err: unknown) {
     console.error("Error creating client:", err);
     dbConnected = false;
 
     if (err instanceof Error) {
       // Handle MongoDB duplicate key error
-      if (err.message.includes('E11000') || err.message.includes('duplicate key')) {
+      if (
+        err.message.includes("E11000") ||
+        err.message.includes("duplicate key")
+      ) {
         return NextResponse.json(
           { error: "Client with this email already exists" },
-          { status: 409 }
+          { status: 409 },
         );
       }
-      
+
       // Handle validation errors
-      if (err.name === 'ValidationError') {
+      if (err.name === "ValidationError") {
         return NextResponse.json(
           { error: "Validation failed - check your input data" },
-          { status: 400 }
+          { status: 400 },
         );
       }
 
       const customErr: CustomError = { message: err.message };
       return NextResponse.json({ error: customErr.message }, { status: 400 });
     }
-    
+
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

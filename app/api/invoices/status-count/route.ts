@@ -9,7 +9,7 @@ const STATUS_CONFIG = {
 } as const;
 
 let dbConnected = false;
-const CACHE_DURATION = 2 * 60 * 1000; 
+const CACHE_DURATION = 2 * 60 * 1000;
 let cache: { data: any; timestamp: number } | null = null;
 
 async function ensureConnection() {
@@ -21,15 +21,15 @@ async function ensureConnection() {
 
 export async function GET(request: Request) {
   try {
-    const cacheHeader = request.headers.get('Cache-Control');
-    const skipCache = cacheHeader === 'no-cache';
-    
+    const cacheHeader = request.headers.get("Cache-Control");
+    const skipCache = cacheHeader === "no-cache";
+
     if (!skipCache && cache && Date.now() - cache.timestamp < CACHE_DURATION) {
       return NextResponse.json(cache.data, {
         headers: {
-          'Cache-Control': 'public, s-maxage=120',
-          'X-Data-Source': 'cache'
-        }
+          "Cache-Control": "public, s-maxage=120",
+          "X-Data-Source": "cache",
+        },
       });
     }
 
@@ -38,21 +38,25 @@ export async function GET(request: Request) {
     const statusCounts = await Invoice.aggregate([
       {
         $match: {
-          status: { 
-            $in: [InvoiceStatus.PAID, InvoiceStatus.PENDING, InvoiceStatus.OVERDUE] 
-          }
-        }
+          status: {
+            $in: [
+              InvoiceStatus.PAID,
+              InvoiceStatus.PENDING,
+              InvoiceStatus.OVERDUE,
+            ],
+          },
+        },
       },
       {
         $group: {
           _id: "$status",
-          count: { $sum: 1 }
-        }
-      }
+          count: { $sum: 1 },
+        },
+      },
     ]);
 
     const countsMap = new Map(
-      statusCounts.map(item => [item._id, item.count])
+      statusCounts.map((item) => [item._id, item.count]),
     );
 
     const paidCount = countsMap.get(InvoiceStatus.PAID) || 0;
@@ -63,35 +67,34 @@ export async function GET(request: Request) {
     const data = Object.entries(STATUS_CONFIG).map(([status, config]) => {
       const value = countsMap.get(status as InvoiceStatus) || 0;
       const percentage = total > 0 ? Math.round((value / total) * 100) : 0;
-      
+
       return {
         name: config.name,
         value,
         percentage,
         color: config.color,
-        status: status
+        status: status,
       };
     });
 
-    const responseData = { 
-      data, 
+    const responseData = {
+      data,
       total,
-      updatedAt: new Date().toISOString()
+      updatedAt: new Date().toISOString(),
     };
 
     // Update cache
     cache = {
       data: responseData,
-      timestamp: Date.now()
+      timestamp: Date.now(),
     };
 
     return NextResponse.json(responseData, {
       headers: {
-        'Cache-Control': 'public, s-maxage=120, stale-while-revalidate=60',
-        'X-Data-Source': 'database'
-      }
+        "Cache-Control": "public, s-maxage=120, stale-while-revalidate=60",
+        "X-Data-Source": "database",
+      },
     });
-
   } catch (error) {
     console.error("Error fetching invoice status counts:", error);
     dbConnected = false;
@@ -102,9 +105,9 @@ export async function GET(request: Request) {
       return NextResponse.json(cache.data, {
         status: 200,
         headers: {
-          'Cache-Control': 'no-cache',
-          'X-Data-Source': 'cache-stale'
-        }
+          "Cache-Control": "no-cache",
+          "X-Data-Source": "cache-stale",
+        },
       });
     }
 

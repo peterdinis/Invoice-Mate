@@ -25,18 +25,18 @@ export async function GET(request: Request) {
 
     // Check cache for repeated requests
     const now = Date.now();
-    if (cache.data && (now - cache.timestamp) < cache.ttl) {
+    if (cache.data && now - cache.timestamp < cache.ttl) {
       return NextResponse.json(cache.data);
     }
 
     // Optimized query with read preferences and timeout
     const clients = await Client.find(
-      {}, 
-      { name: 1, email: 1, address: 1, _id: 1 }
+      {},
+      { name: 1, email: 1, address: 1, _id: 1 },
     )
       .lean()
       .maxTimeMS(3000)
-      .read('primaryPreferred'); // Prefer primary but can read from secondaries
+      .read("primaryPreferred"); // Prefer primary but can read from secondaries
 
     // Update cache
     cache.data = clients;
@@ -45,17 +45,17 @@ export async function GET(request: Request) {
     return NextResponse.json(clients);
   } catch (error) {
     console.error("Error fetching clients:", error);
-    
+
     // Reset connection state
     dbConnected = false;
     dbPromise = null;
-    
+
     // Return cached data as fallback if available (even if stale)
     if (cache.data) {
       console.log("Returning cached data due to error");
       return NextResponse.json(cache.data);
     }
-    
+
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 },
