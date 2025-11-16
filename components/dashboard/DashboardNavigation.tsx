@@ -23,21 +23,23 @@ interface NavItemProps {
   isActive: boolean;
   onClick?: () => void;
 }
-const NavItem: FC<NavItemProps> = memo(({ path, label, Icon, isActive, onClick }) => (
-  <CustomLink href={path}>
-    <Button
-      onClick={onClick}
-      variant={isActive ? "default" : "ghost"}
-      className={cn(
-        "gap-2 w-full justify-start md:w-auto",
-        !isActive && "text-muted-foreground hover:text-foreground"
-      )}
-    >
-      <Icon className="w-4 h-4" />
-      {label}
-    </Button>
-  </CustomLink>
-));
+const NavItem: FC<NavItemProps> = memo(
+  ({ path, label, Icon, isActive, onClick }) => (
+    <CustomLink href={path}>
+      <Button
+        onClick={onClick}
+        variant={isActive ? "default" : "ghost"}
+        className={cn(
+          "gap-2 w-full justify-start md:w-auto",
+          !isActive && "text-muted-foreground hover:text-foreground",
+        )}
+      >
+        <Icon className="w-4 h-4" />
+        {label}
+      </Button>
+    </CustomLink>
+  ),
+);
 
 const DashboardNavigation: FC = () => {
   const pathname = usePathname();
@@ -57,7 +59,7 @@ const DashboardNavigation: FC = () => {
       { path: "/invoices", label: "Faktúry", icon: FileText },
       { path: "/clients", label: "Klienti", icon: Users },
     ],
-    []
+    [],
   );
 
   if (isLoading) {
@@ -77,7 +79,6 @@ const DashboardNavigation: FC = () => {
     <nav className="border-b border-border bg-card/50 backdrop-blur-sm sticky top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-
           {/* Logo */}
           <div className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
@@ -120,7 +121,11 @@ const DashboardNavigation: FC = () => {
             className="md:hidden"
             onClick={() => setMenuOpen((p) => !p)}
           >
-            {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {menuOpen ? (
+              <X className="w-6 h-6" />
+            ) : (
+              <Menu className="w-6 h-6" />
+            )}
           </Button>
         </div>
       </div>
@@ -137,7 +142,6 @@ const DashboardNavigation: FC = () => {
             className="md:hidden border-t border-border bg-card"
           >
             <div className="container mx-auto px-4 py-4 space-y-2">
-
               {navItems.map(({ path, label, icon: Icon }) => {
                 const isActive =
                   pathname === path ||
@@ -161,7 +165,6 @@ const DashboardNavigation: FC = () => {
                   <ProfileDropdown />
                 </Suspense>
               </div>
-
             </div>
           </motion.div>
         )}

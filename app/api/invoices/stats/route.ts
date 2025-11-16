@@ -144,8 +144,8 @@ export async function GET(request: NextRequest) {
       lastMonthAmount > 0
         ? ((thisMonthAmount - lastMonthAmount) / lastMonthAmount) * 100
         : thisMonthAmount > 0
-        ? 100
-        : 0;
+          ? 100
+          : 0;
 
     const invoiceChange =
       lastMonthInvoicesCount > 0
@@ -153,8 +153,8 @@ export async function GET(request: NextRequest) {
             lastMonthInvoicesCount) *
           100
         : thisMonthInvoicesCount > 0
-        ? 100
-        : 0;
+          ? 100
+          : 0;
 
     const responseData = {
       totalRevenue: totalRevenueAmount,
@@ -177,8 +177,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(responseData, {
       headers: {
-        "Cache-Control":
-          "public, s-maxage=300, stale-while-revalidate=150",
+        "Cache-Control": "public, s-maxage=300, stale-while-revalidate=150",
         "X-Data-Source": "database",
       },
     });
@@ -203,7 +202,7 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

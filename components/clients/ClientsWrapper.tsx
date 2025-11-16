@@ -321,7 +321,9 @@ const ClientsWrapper: FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Detail klienta</DialogTitle>
-            <DialogDescription>Informácie o vybranom klientovi</DialogDescription>
+            <DialogDescription>
+              Informácie o vybranom klientovi
+            </DialogDescription>
           </DialogHeader>
 
           {selectedClient && (
@@ -358,9 +360,7 @@ const ClientsWrapper: FC = () => {
               {selectedClient.address && (
                 <div>
                   <p className="text-xs text-muted-foreground">Adresa</p>
-                  <p className="font-semibold">
-                    {selectedClient.address}
-                  </p>
+                  <p className="font-semibold">{selectedClient.address}</p>
                 </div>
               )}
 
@@ -394,7 +394,9 @@ const ClientsWrapper: FC = () => {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Upraviť klienta</DialogTitle>
-            <DialogDescription>Upravte informácie o klientovi</DialogDescription>
+            <DialogDescription>
+              Upravte informácie o klientovi
+            </DialogDescription>
           </DialogHeader>
 
           {editedClient && (
@@ -405,7 +407,9 @@ const ClientsWrapper: FC = () => {
                 </div>
                 <div>
                   <h3 className="font-semibold text-lg">Upraviť klienta</h3>
-                  <p className="text-sm text-muted-foreground">Aktualizujte údaje</p>
+                  <p className="text-sm text-muted-foreground">
+                    Aktualizujte údaje
+                  </p>
                 </div>
               </div>
 
@@ -434,7 +438,9 @@ const ClientsWrapper: FC = () => {
                   <Input
                     id="address"
                     value={editedClient.address || ""}
-                    onChange={(e) => handleInputChange("address", e.target.value)}
+                    onChange={(e) =>
+                      handleInputChange("address", e.target.value)
+                    }
                   />
                 </div>
               </div>
@@ -460,7 +466,9 @@ const ClientsWrapper: FC = () => {
       <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-red-600">Odstrániť klienta</DialogTitle>
+            <DialogTitle className="text-red-600">
+              Odstrániť klienta
+            </DialogTitle>
             <DialogDescription>
               Naozaj chcete odstrániť tohto klienta? Táto akcia je nevratná.
             </DialogDescription>
@@ -474,7 +482,9 @@ const ClientsWrapper: FC = () => {
                 </div>
                 <div>
                   <h4 className="font-semibold">{selectedClient.name}</h4>
-                  <p className="text-sm text-muted-foreground">{selectedClient.email}</p>
+                  <p className="text-sm text-muted-foreground">
+                    {selectedClient.email}
+                  </p>
                 </div>
               </div>
             </div>
@@ -488,7 +498,11 @@ const ClientsWrapper: FC = () => {
             >
               Zrušiť
             </Button>
-            <Button variant="destructive" onClick={confirmDelete} className="flex-1">
+            <Button
+              variant="destructive"
+              onClick={confirmDelete}
+              className="flex-1"
+            >
               Odstrániť
             </Button>
           </DialogFooter>

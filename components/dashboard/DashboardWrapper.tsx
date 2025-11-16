@@ -60,9 +60,7 @@ const DashboardWrapper: FC = () => {
                       <Plus className="w-5 h-5" />
                     </Button>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    Nová faktúra
-                  </TooltipContent>
+                  <TooltipContent>Nová faktúra</TooltipContent>
                 </Tooltip>
               </CustomLink>
             </nav>
