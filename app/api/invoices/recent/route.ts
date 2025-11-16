@@ -3,7 +3,6 @@ import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 import { CustomError } from "@/types/ErrorType";
 
-// Cache a konštanty
 const DEFAULT_LIMIT = 5;
 const MAX_LIMIT = 50;
 let dbConnected = false;
@@ -19,7 +18,6 @@ export async function GET(request: Request) {
   try {
     await ensureConnection();
 
-    // Parsovanie query parametrov pre flexibilitu
     const url = new URL(request.url);
     const limit = Math.min(
       MAX_LIMIT, 
@@ -27,25 +25,22 @@ export async function GET(request: Request) {
     );
     const includeItems = url.searchParams.get("includeItems") === "true";
 
-    // Optimalizovaný dotaz s presnou projekciou
     const invoices = await Invoice.find()
       .select("invoiceNumber status total dueDate invoiceDate createdAt updatedAt")
       .populate({
         path: "client",
-        select: "name email", // Iba potrebné polia klienta
+        select: "name email",
       })
       .populate({
         path: "folder", 
-        select: "name", // Iba názov priečinka
+        select: "name",
       })
       .sort({ createdAt: -1 })
       .limit(limit)
-      .lean(); // Výrazne zlepší výkon
+      .lean();
 
-    // Podmienené populovanie invoice items len ak je potrebné
     let invoicesWithItems = invoices;
     if (includeItems) {
-      // Separate query pre items aby sme neblokovali hlavný dotaz
       const invoiceIds = invoices.map(inv => inv._id);
       const itemsByInvoice = await Invoice.aggregate([
         {
@@ -59,14 +54,12 @@ export async function GET(request: Request) {
         }
       ]);
 
-      // Merge items do výsledkov
       invoicesWithItems = invoices.map(invoice => ({
         ...invoice,
         items: itemsByInvoice.find(item => item._id.equals(invoice._id))?.items || []
       }));
     }
 
-    // Cache headers pre statické dáta
     return NextResponse.json(invoicesWithItems, {
       headers: {
         'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
@@ -75,10 +68,9 @@ export async function GET(request: Request) {
 
   } catch (err: unknown) {
     console.error("Error fetching invoices:", err);
-    dbConnected = false; // Reset connection on error
+    dbConnected = false;
 
     if (err instanceof Error) {
-      // Špecifický error handling
       if (err.name === 'MongoNetworkError') {
         return NextResponse.json(
           { error: "Database connection failed" },

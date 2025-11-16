@@ -3,9 +3,8 @@ import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 import { CustomError } from "@/types/ErrorType";
 
-// Cache a konštanty
 let dbConnected = false;
-const CACHE_DURATION = 5 * 60 * 1000; // 5 minút cache
+const CACHE_DURATION = 5 * 60 * 1000;
 let cache: { data: any; timestamp: number } | null = null;
 
 async function ensureConnection() {
@@ -49,7 +48,6 @@ export async function GET(request: NextRequest) {
     const now = new Date();
     const { firstDayOfMonth, lastDayOfMonth, firstDayOfLastMonth, lastDayOfLastMonth } = getMonthDates(now);
 
-    // Jeden optimalizovaný aggregation pipeline namiesto 7 separate queries
     const stats = await Invoice.aggregate([
       {
         $facet: {

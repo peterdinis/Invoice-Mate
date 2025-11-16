@@ -3,7 +3,6 @@ import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 import { CustomError } from "@/types/ErrorType";
 
-// Cache a konštanty
 const MONTH_NAMES = ["Jan", "Feb", "Mar", "Apr", "Máj", "Jún", "Júl", "Aug", "Sep", "Okt", "Nov", "Dec"];
 const DEFAULT_MONTHS = 6;
 const MAX_MONTHS = 24;
@@ -29,7 +28,6 @@ export async function GET(request: NextRequest) {
     const currentYear = now.getFullYear();
     const currentMonth = now.getMonth();
 
-    // Jediný optimalizovaný aggregation pipeline namiesto loopu
     const revenueData = await Invoice.aggregate([
       {
         $match: {
@@ -67,12 +65,11 @@ export async function GET(request: NextRequest) {
       }
     ]);
 
-    // Transformácia dát do požadovaného formátu
     const monthsData = [];
     for (let i = 0; i < months; i++) {
       const targetDate = new Date(currentYear, currentMonth - i, 1);
       const targetYear = targetDate.getFullYear();
-      const targetMonth = targetDate.getMonth() + 1; // MongoDB months are 1-based
+      const targetMonth = targetDate.getMonth() + 1
       
       const foundData = revenueData.find(
         item => item.year === targetYear && item.month === targetMonth
@@ -86,10 +83,9 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    // Cache headers pre statické dáta
     return NextResponse.json(monthsData, {
       headers: {
-        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150', // 5 min cache
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150',
       },
     });
 
@@ -98,7 +94,6 @@ export async function GET(request: NextRequest) {
     dbConnected = false;
 
     if (err instanceof Error) {
-      // Špecifické error handling
       if (err.name === 'MongoNetworkError') {
         return NextResponse.json(
           { error: "Database connection failed" },

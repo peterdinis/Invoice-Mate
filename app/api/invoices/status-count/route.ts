@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import Invoice, { InvoiceStatus } from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 
-// Cache a konštanty
 const STATUS_CONFIG = {
   [InvoiceStatus.PAID]: { name: "Zaplatené", color: "#22c55e" },
   [InvoiceStatus.PENDING]: { name: "Čakajúce", color: "#eab308" },
@@ -10,7 +9,7 @@ const STATUS_CONFIG = {
 } as const;
 
 let dbConnected = false;
-const CACHE_DURATION = 2 * 60 * 1000; // 2 minúty cache
+const CACHE_DURATION = 2 * 60 * 1000; 
 let cache: { data: any; timestamp: number } | null = null;
 
 async function ensureConnection() {
@@ -22,7 +21,6 @@ async function ensureConnection() {
 
 export async function GET(request: Request) {
   try {
-    // Check cache first
     const cacheHeader = request.headers.get('Cache-Control');
     const skipCache = cacheHeader === 'no-cache';
     
@@ -37,7 +35,6 @@ export async function GET(request: Request) {
 
     await ensureConnection();
 
-    // Jeden aggregation pipeline namiesto troch separate countDocuments
     const statusCounts = await Invoice.aggregate([
       {
         $match: {
@@ -54,7 +51,6 @@ export async function GET(request: Request) {
       }
     ]);
 
-    // Transformácia dát do požadovaného formátu
     const countsMap = new Map(
       statusCounts.map(item => [item._id, item.count])
     );

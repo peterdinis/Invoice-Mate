@@ -3,7 +3,6 @@ import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 import { CustomError } from "@/types/ErrorType";
 
-// Cache a konštanty
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 const MIN_QUERY_LENGTH = 2;
@@ -28,7 +27,6 @@ export async function GET(req: Request) {
       parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT))
     );
 
-    // Rýchla validácia query
     if (query.length < MIN_QUERY_LENGTH) {
       return NextResponse.json(
         { error: `Query must be at least ${MIN_QUERY_LENGTH} characters` },
@@ -43,31 +41,28 @@ export async function GET(req: Request) {
       );
     }
 
-    // Optimalizovaný search s index-friendly podmienkami
     const searchFilter = {
       $or: [
-        { clientName: { $regex: `^${query}`, $options: "i" } }, // Prefix search - rýchlejšie
+        { clientName: { $regex: `^${query}`, $options: "i" } },
         { invoiceNumber: { $regex: query, $options: "i" } },
       ],
     };
 
-    // Optimalizovaný dotaz s projekciou a lean
     const invoices = await Invoice.find(searchFilter)
       .select("invoiceNumber status total dueDate invoiceDate clientName createdAt")
       .populate({
         path: "client",
-        select: "name email phone", // Iba potrebné polia
+        select: "name email phone",
       })
       .populate({
         path: "folder",
-        select: "name color", // Iba potrebné polia
+        select: "name color",
       })
       .sort({ createdAt: -1 })
       .limit(limit)
       .lean()
-      .maxTimeMS(5000); // Timeout pre bezpečnosť
+      .maxTimeMS(5000);
 
-    // Cache headers pre podobné search queries
     return NextResponse.json({
       data: invoices,
       meta: {
@@ -77,7 +72,7 @@ export async function GET(req: Request) {
       }
     }, {
       headers: {
-        'Cache-Control': query ? 'no-cache' : 'public, s-maxage=60', // Search results nie sú cacheovatelné
+        'Cache-Control': query ? 'no-cache' : 'public, s-maxage=60',
       },
     });
 
@@ -86,7 +81,6 @@ export async function GET(req: Request) {
     dbConnected = false;
 
     if (err instanceof Error) {
-      // Špecifický error handling
       if (err.name === 'MongoNetworkError') {
         return NextResponse.json(
           { error: "Database connection failed" },

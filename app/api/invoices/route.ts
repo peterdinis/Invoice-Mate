@@ -4,7 +4,6 @@ import connectToDB from "@/lib/auth/mongoose";
 import Folder from "@/models/Folder";
 import { InvoiceFilter } from "@/types/ClientTypes";
 
-// Cache a konštanty
 const DEFAULT_PAGE = 1;
 const DEFAULT_LIMIT = 10;
 const MAX_LIMIT = 100;
@@ -25,9 +24,8 @@ function buildSearchFilter(searchTerm: string, folderId: string | null): Invoice
   }
 
   if (searchTerm) {
-    // Optimalizovaný search s lepším využitím indexov
     filter.$or = [
-      { invoiceNumber: { $regex: `^${searchTerm}`, $options: "i" } }, // Prefix search
+      { invoiceNumber: { $regex: `^${searchTerm}`, $options: "i" } },
       { "client.name": { $regex: searchTerm, $options: "i" } },
       { "client.email": { $regex: searchTerm, $options: "i" } },
     ];
@@ -49,23 +47,22 @@ export async function GET(req: NextRequest) {
 
     const filter = buildSearchFilter(searchTerm, folderId);
 
-    // Paralelné vykonanie queries pre lepší výkon
     const [invoices, total] = await Promise.all([
       Invoice.find(filter)
         .select("invoiceNumber status total dueDate invoiceDate createdAt updatedAt")
         .populate({
           path: "client",
-          select: "name email address", // Iba potrebné polia
+          select: "name email address", 
         })
         .populate({
           path: "folder",
-          select: "name color", // Iba potrebné polia
+          select: "name color", 
         })
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .lean() // Výrazne zlepší výkon
-        .maxTimeMS(10000), // Timeout pre bezpečnosť,
+        .lean()
+        .maxTimeMS(10000),
       
       Invoice.countDocuments(filter)
     ]);
@@ -82,7 +79,7 @@ export async function GET(req: NextRequest) {
       },
     }, {
       headers: {
-        'Cache-Control': 'no-cache', // Paginated data nie je dobré cacheovať
+        'Cache-Control': 'no-cache',
       },
     });
 
@@ -117,7 +114,6 @@ export async function POST(req: NextRequest) {
     
     const body: Partial<IInvoice> = await req.json();
 
-    // Validácia povinných polí
     if (!body.invoiceNumber || !body.client || !body.total) {
       return NextResponse.json(
         { message: "Invoice number, client and total are required" },
@@ -125,7 +121,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Kontrola duplicity invoice number
     const existingInvoice = await Invoice.findOne({ 
       invoiceNumber: body.invoiceNumber 
     }).select('_id').lean();
@@ -137,7 +132,6 @@ export async function POST(req: NextRequest) {
       );
     }
 
-    // Kontrola folder existencie paralelne s inými operáciami
     if (body.folder) {
       const folderExists = await Folder.findById(body.folder).select('_id').lean();
       if (!folderExists) {
@@ -148,15 +142,13 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // Vytvorenie faktúry s default hodnotami
     const newInvoice = await Invoice.create({
       ...body,
       status: body.status || 'draft',
       createdAt: new Date(),
       updatedAt: new Date(),
     });
-
-    // Optimalizovaná odpoveď s iba potrebnými údajmi
+    
     const responseInvoice = await Invoice.findById(newInvoice._id)
       .select("invoiceNumber status total dueDate invoiceDate client folder createdAt")
       .populate({
