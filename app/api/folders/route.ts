@@ -2,7 +2,6 @@ import { NextResponse } from "next/server";
 import Folder from "@/models/Folder";
 import connectToDB from "@/lib/auth/mongoose";
 
-// Správa pripojenia k databáze
 let dbConnected = false;
 const MAX_RETRIES = 2;
 
@@ -20,30 +19,26 @@ export async function GET(request: Request) {
     try {
       await ensureConnection();
 
-      // Parsovanie query parametrov pre optimalizáciu
       const url = new URL(request.url);
       const limit = Math.min(1000, parseInt(url.searchParams.get("limit") || "50"));
       const withDocuments = url.searchParams.get("withDocuments") === "true";
 
-      // Optimalizovaný dotaz s projekciou
       const query = Folder.find()
         .select(withDocuments ? "name description createdAt documents" : "name description createdAt")
         .sort({ createdAt: -1 })
         .limit(limit)
-        .lean(); // Výrazne zlepší výkon
+        .lean();
 
-      // Podmienené populovanie dokumentov
       if (withDocuments) {
         query.populate({
           path: "documents",
-          select: "name size createdAt", // Iba potrebné polia
+          select: "name size createdAt",
           options: { sort: { createdAt: -1 }, limit: 20 }
         });
       }
 
       const folders = await query;
 
-      // Pridanie cache headers pre lepší výkon
       return NextResponse.json(folders, {
         headers: {
           'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=30',
@@ -52,7 +47,7 @@ export async function GET(request: Request) {
 
     } catch (error) {
       retries++;
-      dbConnected = false; // Reset pripojenia pri chybe
+      dbConnected = false;
       
       if (retries > MAX_RETRIES) {
         console.error("Chyba pri načítaní priečinkov:", error);
@@ -61,8 +56,7 @@ export async function GET(request: Request) {
           { status: 500 },
         );
       }
-      
-      // Krátka pauza pred rekonnektom
+
       await new Promise(resolve => setTimeout(resolve, 100 * retries));
     }
   }
@@ -74,7 +68,6 @@ export async function POST(req: Request) {
 
     const { name, description } = await req.json();
 
-    // Validácia a sanitizácia vstupov
     const folderName = name?.trim();
     if (!folderName) {
       return NextResponse.json(
@@ -83,7 +76,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // Kontrola duplicity
     const existingFolder = await Folder.findOne({ 
       name: { $regex: `^${folderName}$`, $options: 'i' }
     }).select('_id').lean();
@@ -95,13 +87,11 @@ export async function POST(req: Request) {
       );
     }
 
-    // Vytvorenie priečinka
     const newFolder = await Folder.create({ 
       name: folderName, 
       description: description?.trim() || "" 
     });
 
-    // Optimalizovaná odpoveď - iba potrebné údaje
     return NextResponse.json({
       _id: newFolder._id,
       name: newFolder.name,
@@ -117,8 +107,7 @@ export async function POST(req: Request) {
   } catch (error: any) {
     console.error("Chyba pri vytváraní priečinka:", error);
     dbConnected = false;
-
-    // Špecifická ošetrenie chýb
+    
     if (error.name === 'ValidationError') {
       return NextResponse.json(
         { error: "Neplatné údaje pre priečinok" },

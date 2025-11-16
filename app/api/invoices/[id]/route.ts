@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 
-// Cache pre platné statusy a pripojenie
 const VALID_STATUSES = ["draft", "pending", "paid", "overdue"] as const;
 type InvoiceStatus = typeof VALID_STATUSES[number];
 let dbConnected = false;
@@ -19,7 +18,6 @@ export async function PATCH(
   props: { params: Promise<{ id: string }> },
 ) {
   try {
-    // Paralelné spracovanie parametrov a pripojenia
     const [params, body] = await Promise.all([
       props.params,
       req.json()
@@ -29,7 +27,6 @@ export async function PATCH(
 
     const invoiceId = params.id;
 
-    // Rýchla validácia ObjectId
     if (!invoiceId || invoiceId.length !== 24 || !/^[0-9a-fA-F]{24}$/.test(invoiceId)) {
       return NextResponse.json(
         { error: "Neplatné ID faktúry" },
@@ -40,7 +37,6 @@ export async function PATCH(
     const { status, paidAt, notes } = body;
     const statusUpdate = status as InvoiceStatus;
 
-    // Validácia statusu
     if (!VALID_STATUSES.includes(statusUpdate)) {
       return NextResponse.json(
         { 
@@ -51,35 +47,30 @@ export async function PATCH(
       );
     }
 
-    // Príprava updatov s automatickými dátumami
     const updateData: any = { 
       status: statusUpdate,
       updatedAt: new Date()
     };
 
-    // Automatické nastavenie paidAt ak sa mení na 'paid'
     if (statusUpdate === 'paid' && !paidAt) {
       updateData.paidAt = new Date();
     } else if (paidAt) {
       updateData.paidAt = paidAt;
     }
 
-    // Pridanie notes ak sú poskytnuté
     if (notes !== undefined) {
       updateData.notes = notes;
     }
 
-    // Optimalizovaný update s projekciou
     const updatedInvoice = await Invoice.findByIdAndUpdate(
       invoiceId,
       updateData,
       { 
         new: true, 
         runValidators: true,
-        // Iba potrebné polia pre lepší výkon
         select: "invoiceNumber status amount client dueDate paidAt notes createdAt updatedAt"
       }
-    ).lean(); // lean() pre rýchlejšiu odpoveď
+    ).lean();
 
     if (!updatedInvoice) {
       return NextResponse.json(
@@ -88,11 +79,10 @@ export async function PATCH(
       );
     }
 
-    // Cache headers pre lepší výkon
     return NextResponse.json(updatedInvoice, {
       status: 200,
       headers: {
-        'Cache-Control': 'no-cache', // Faktúry sú často menené
+        'Cache-Control': 'no-cache',
       },
     });
 
@@ -100,7 +90,6 @@ export async function PATCH(
     console.error("Chyba pri aktualizácii faktúry:", error);
     dbConnected = false;
 
-    // Špecifické error handling
     if (error.name === 'ValidationError') {
       return NextResponse.json(
         { error: "Neplatné údaje pre faktúru" },
