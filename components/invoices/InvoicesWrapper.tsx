@@ -60,6 +60,7 @@ import {
 } from "@/components/ui/select";
 import autoTable from "jspdf-autotable";
 import { Invoice } from "@/types/InvoiceTypes";
+import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 // Constants
 const ITEMS_PER_PAGE = 5;
@@ -514,9 +515,16 @@ const InvoicesWrapper = () => {
               </p>
             </div>
             <CustomLink href="/invoices/new">
-              <Button className="gap-2" size="lg">
-                <Plus className="w-5 h-5" /> Nová faktúra
-              </Button>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button className="gap-2" size="lg">
+                    <Plus className="w-5 h-5" />
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Nová faktúra
+                </TooltipContent>
+              </Tooltip>
             </CustomLink>
           </div>
 
