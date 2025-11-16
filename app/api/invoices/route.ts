@@ -4,16 +4,20 @@ import connectToDB from "@/lib/auth/mongoose";
 import Folder from "@/models/Folder";
 import { InvoiceFilter } from "@/types/ClientTypes";
 
-export async function GET(req: NextRequest) {
-  await connectToDB();
+// Cache a konštanty
+const DEFAULT_PAGE = 1;
+const DEFAULT_LIMIT = 10;
+const MAX_LIMIT = 100;
+let dbConnected = false;
 
-  const { searchParams } = new URL(req.url);
-  const page = parseInt(searchParams.get("page") || "1", 10);
-  const limit = parseInt(searchParams.get("limit") || "10", 10);
-  const folderId = searchParams.get("folderId") || null;
-  const searchTerm = searchParams.get("search") || "";
-  const skip = (page - 1) * limit;
+async function ensureConnection() {
+  if (!dbConnected) {
+    await connectToDB();
+    dbConnected = true;
+  }
+}
 
+function buildSearchFilter(searchTerm: string, folderId: string | null): InvoiceFilter {
   const filter: InvoiceFilter = {};
 
   if (folderId) {
@@ -21,52 +25,178 @@ export async function GET(req: NextRequest) {
   }
 
   if (searchTerm) {
+    // Optimalizovaný search s lepším využitím indexov
     filter.$or = [
-      { invoiceNumber: { $regex: searchTerm, $options: "i" } },
+      { invoiceNumber: { $regex: `^${searchTerm}`, $options: "i" } }, // Prefix search
       { "client.name": { $regex: searchTerm, $options: "i" } },
       { "client.email": { $regex: searchTerm, $options: "i" } },
     ];
   }
 
-  const invoices = await Invoice.find(filter)
-    .populate("client")
-    .sort({ createdAt: -1 })
-    .skip(skip)
-    .limit(limit);
+  return filter;
+}
 
-  const total = await Invoice.countDocuments(filter);
+export async function GET(req: NextRequest) {
+  try {
+    await ensureConnection();
 
-  return NextResponse.json({
-    invoices,
-    pagination: {
-      total,
-      page,
-      limit,
-      pages: Math.ceil(total / limit),
-    },
-  });
+    const { searchParams } = new URL(req.url);
+    const page = Math.max(DEFAULT_PAGE, parseInt(searchParams.get("page") || String(DEFAULT_PAGE), 10));
+    const limit = Math.min(MAX_LIMIT, Math.max(1, parseInt(searchParams.get("limit") || String(DEFAULT_LIMIT), 10)));
+    const folderId = searchParams.get("folderId");
+    const searchTerm = (searchParams.get("search") || "").trim();
+    const skip = (page - 1) * limit;
+
+    const filter = buildSearchFilter(searchTerm, folderId);
+
+    // Paralelné vykonanie queries pre lepší výkon
+    const [invoices, total] = await Promise.all([
+      Invoice.find(filter)
+        .select("invoiceNumber status total dueDate invoiceDate createdAt updatedAt")
+        .populate({
+          path: "client",
+          select: "name email address", // Iba potrebné polia
+        })
+        .populate({
+          path: "folder",
+          select: "name color", // Iba potrebné polia
+        })
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(limit)
+        .lean() // Výrazne zlepší výkon
+        .maxTimeMS(10000), // Timeout pre bezpečnosť,
+      
+      Invoice.countDocuments(filter)
+    ]);
+
+    return NextResponse.json({
+      invoices,
+      pagination: {
+        total,
+        page,
+        limit,
+        pages: Math.ceil(total / limit),
+        hasNext: page < Math.ceil(total / limit),
+        hasPrev: page > 1,
+      },
+    }, {
+      headers: {
+        'Cache-Control': 'no-cache', // Paginated data nie je dobré cacheovať
+      },
+    });
+
+  } catch (error: any) {
+    console.error("Error fetching invoices:", error);
+    dbConnected = false;
+
+    if (error.name === 'MongoNetworkError') {
+      return NextResponse.json(
+        { message: "Database connection failed" },
+        { status: 503 }
+      );
+    }
+
+    if (error.message.includes('timeout')) {
+      return NextResponse.json(
+        { message: "Request timeout - try refining your search" },
+        { status: 408 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
+  }
 }
 
 export async function POST(req: NextRequest) {
   try {
-    await connectToDB();
+    await ensureConnection();
+    
     const body: Partial<IInvoice> = await req.json();
 
-    const folderExists = await Folder.findById(body.folder);
-    if (!folderExists) {
+    // Validácia povinných polí
+    if (!body.invoiceNumber || !body.client || !body.total) {
       return NextResponse.json(
-        { message: "Folder not found" },
-        { status: 404 },
+        { message: "Invoice number, client and total are required" },
+        { status: 400 }
       );
     }
 
-    const newInvoice = await Invoice.create(body);
-    return NextResponse.json(newInvoice, { status: 201 });
-  } catch (err: unknown) {
-    console.error(err);
-    if (err instanceof Error) {
-      return NextResponse.json({ message: err.message }, { status: 500 });
+    // Kontrola duplicity invoice number
+    const existingInvoice = await Invoice.findOne({ 
+      invoiceNumber: body.invoiceNumber 
+    }).select('_id').lean();
+
+    if (existingInvoice) {
+      return NextResponse.json(
+        { message: "Invoice with this number already exists" },
+        { status: 409 }
+      );
     }
-    return NextResponse.json({ message: "Unknown error" }, { status: 500 });
+
+    // Kontrola folder existencie paralelne s inými operáciami
+    if (body.folder) {
+      const folderExists = await Folder.findById(body.folder).select('_id').lean();
+      if (!folderExists) {
+        return NextResponse.json(
+          { message: "Folder not found" },
+          { status: 404 }
+        );
+      }
+    }
+
+    // Vytvorenie faktúry s default hodnotami
+    const newInvoice = await Invoice.create({
+      ...body,
+      status: body.status || 'draft',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    // Optimalizovaná odpoveď s iba potrebnými údajmi
+    const responseInvoice = await Invoice.findById(newInvoice._id)
+      .select("invoiceNumber status total dueDate invoiceDate client folder createdAt")
+      .populate({
+        path: "client",
+        select: "name email",
+      })
+      .populate({
+        path: "folder", 
+        select: "name",
+      })
+      .lean();
+
+    return NextResponse.json(responseInvoice, { 
+      status: 201,
+      headers: {
+        'Location': `/api/invoices/${newInvoice._id}`
+      }
+    });
+
+  } catch (error: any) {
+    console.error("Error creating invoice:", error);
+    dbConnected = false;
+
+    if (error.name === 'ValidationError') {
+      return NextResponse.json(
+        { message: "Invalid invoice data" },
+        { status: 400 }
+      );
+    }
+
+    if (error.code === 11000) {
+      return NextResponse.json(
+        { message: "Invoice number already exists" },
+        { status: 409 }
+      );
+    }
+
+    return NextResponse.json(
+      { message: "Internal server error" },
+      { status: 500 }
+    );
   }
 }

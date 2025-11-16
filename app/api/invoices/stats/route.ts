@@ -3,18 +3,111 @@ import Invoice from "@/models/Invoice";
 import connectToDB from "@/lib/auth/mongoose";
 import { CustomError } from "@/types/ErrorType";
 
+// Cache a konštanty
+let dbConnected = false;
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minút cache
+let cache: { data: any; timestamp: number } | null = null;
+
+async function ensureConnection() {
+  if (!dbConnected) {
+    await connectToDB();
+    dbConnected = true;
+  }
+}
+
+function getMonthDates(now: Date = new Date()) {
+  const currentYear = now.getFullYear();
+  const currentMonth = now.getMonth();
+  
+  const firstDayOfMonth = new Date(currentYear, currentMonth, 1);
+  const lastDayOfMonth = new Date(currentYear, currentMonth + 1, 0);
+  const firstDayOfLastMonth = new Date(currentYear, currentMonth - 1, 1);
+  const lastDayOfLastMonth = new Date(currentYear, currentMonth, 0);
+  
+  return {
+    firstDayOfMonth,
+    lastDayOfMonth,
+    firstDayOfLastMonth,
+    lastDayOfLastMonth
+  };
+}
+
 export async function GET(request: NextRequest) {
   try {
-    await connectToDB();
+    // Check cache first
+    if (cache && Date.now() - cache.timestamp < CACHE_DURATION) {
+      return NextResponse.json(cache.data, {
+        headers: {
+          'Cache-Control': 'public, s-maxage=300',
+          'X-Data-Source': 'cache'
+        }
+      });
+    }
+
+    await ensureConnection();
 
     const now = new Date();
-    const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastDayOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-    const firstDayOfLastMonth = new Date(
-      now.getFullYear(),
-      now.getMonth() - 1,
-      1,
-    );
+    const { firstDayOfMonth, lastDayOfMonth, firstDayOfLastMonth, lastDayOfLastMonth } = getMonthDates(now);
+
+    // Jeden optimalizovaný aggregation pipeline namiesto 7 separate queries
+    const stats = await Invoice.aggregate([
+      {
+        $facet: {
+          // Revenue statistics
+          totalRevenue: [
+            { $match: { status: "paid" } },
+            { $group: { _id: null, total: { $sum: "$total" } } }
+          ],
+          thisMonthRevenue: [
+            {
+              $match: {
+                status: "paid",
+                invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+              }
+            },
+            { $group: { _id: null, total: { $sum: "$total" } } }
+          ],
+          lastMonthRevenue: [
+            {
+              $match: {
+                status: "paid",
+                invoiceDate: { $gte: firstDayOfLastMonth, $lte: lastDayOfLastMonth }
+              }
+            },
+            { $group: { _id: null, total: { $sum: "$total" } } }
+          ],
+          // Invoice counts
+          totalInvoices: [
+            { $count: "count" }
+          ],
+          thisMonthInvoices: [
+            {
+              $match: {
+                invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+              }
+            },
+            { $count: "count" }
+          ],
+          lastMonthInvoices: [
+            {
+              $match: {
+                invoiceDate: { $gte: firstDayOfLastMonth, $lte: lastDayOfLastMonth }
+              }
+            },
+            { $count: "count" }
+          ],
+          paidInvoicesThisMonth: [
+            {
+              $match: {
+                status: "paid",
+                invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth }
+              }
+            },
+            { $count: "count" }
+          ]
+        }
+      }
+    ]);
 
     const [
       totalRevenue,
@@ -23,77 +116,79 @@ export async function GET(request: NextRequest) {
       totalInvoices,
       thisMonthInvoices,
       lastMonthInvoices,
-      paidInvoices,
-    ] = await Promise.all([
-      Invoice.aggregate([
-        { $match: { status: "paid" } },
-        { $group: { _id: null, total: { $sum: "$total" } } },
-      ]),
+      paidInvoicesThisMonth
+    ] = stats[0];
 
-      Invoice.aggregate([
-        {
-          $match: {
-            status: "paid",
-            invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
-          },
-        },
-        { $group: { _id: null, total: { $sum: "$total" } } },
-      ]),
-
-      Invoice.aggregate([
-        {
-          $match: {
-            status: "paid",
-            invoiceDate: { $gte: firstDayOfLastMonth, $lt: firstDayOfMonth },
-          },
-        },
-        { $group: { _id: null, total: { $sum: "$total" } } },
-      ]),
-
-      Invoice.countDocuments(),
-
-      Invoice.countDocuments({
-        invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
-      }),
-
-      Invoice.countDocuments({
-        invoiceDate: { $gte: firstDayOfLastMonth, $lt: firstDayOfMonth },
-      }),
-
-      Invoice.countDocuments({
-        status: "paid",
-        invoiceDate: { $gte: firstDayOfMonth, $lte: lastDayOfMonth },
-      }),
-    ]);
-
+    // Extract values
     const totalRevenueAmount = totalRevenue[0]?.total || 0;
     const thisMonthAmount = thisMonthRevenue[0]?.total || 0;
     const lastMonthAmount = lastMonthRevenue[0]?.total || 0;
+    const totalInvoicesCount = totalInvoices[0]?.count || 0;
+    const thisMonthInvoicesCount = thisMonthInvoices[0]?.count || 0;
+    const lastMonthInvoicesCount = lastMonthInvoices[0]?.count || 0;
+    const paidInvoicesCount = paidInvoicesThisMonth[0]?.count || 0;
 
-    const revenueChange =
-      lastMonthAmount > 0
-        ? ((thisMonthAmount - lastMonthAmount) / lastMonthAmount) * 100
-        : 0;
+    // Calculate changes
+    const revenueChange = lastMonthAmount > 0 
+      ? ((thisMonthAmount - lastMonthAmount) / lastMonthAmount) * 100 
+      : thisMonthAmount > 0 ? 100 : 0;
 
-    const invoiceChange =
-      lastMonthInvoices > 0
-        ? ((thisMonthInvoices - lastMonthInvoices) / lastMonthInvoices) * 100
-        : 0;
+    const invoiceChange = lastMonthInvoicesCount > 0
+      ? ((thisMonthInvoicesCount - lastMonthInvoicesCount) / lastMonthInvoicesCount) * 100
+      : thisMonthInvoicesCount > 0 ? 100 : 0;
 
-    return NextResponse.json({
+    const responseData = {
       totalRevenue: totalRevenueAmount,
-      revenueChange: parseFloat(revenueChange.toFixed(1)),
-      totalInvoices,
-      invoiceChange: parseFloat(invoiceChange.toFixed(1)),
+      revenueChange: Math.round(revenueChange * 10) / 10, // Better than toFixed
+      totalInvoices: totalInvoicesCount,
+      invoiceChange: Math.round(invoiceChange * 10) / 10,
       thisMonthRevenue: thisMonthAmount,
-      thisMonthInvoices,
-      paidInvoicesThisMonth: paidInvoices,
+      thisMonthInvoices: thisMonthInvoicesCount,
+      paidInvoicesThisMonth: paidInvoicesCount,
+      lastMonthRevenue: lastMonthAmount,
+      lastMonthInvoices: lastMonthInvoicesCount,
+      updatedAt: now.toISOString()
+    };
+
+    // Update cache
+    cache = {
+      data: responseData,
+      timestamp: Date.now()
+    };
+
+    return NextResponse.json(responseData, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=150',
+        'X-Data-Source': 'database'
+      }
     });
+
   } catch (err: unknown) {
+    console.error("Error fetching dashboard stats:", err);
+    dbConnected = false;
+
+    // Return cached data even if stale as fallback
+    if (cache) {
+      console.log("Returning stale cached data due to error");
+      return NextResponse.json(cache.data, {
+        headers: {
+          'Cache-Control': 'no-cache',
+          'X-Data-Source': 'cache-stale'
+        }
+      });
+    }
+
     if (err instanceof Error) {
       const customErr: CustomError = { message: err.message };
-      return NextResponse.json({ error: customErr.message }, { status: 400 });
+      return NextResponse.json(
+        { error: customErr.message }, 
+        { status: 400 }
+      );
     }
-    return NextResponse.json({ error: "Unknown error" }, { status: 400 });
+    
+    return NextResponse.json(
+      { error: "Internal server error" }, 
+      { status: 500 }
+    );
   }
 }
